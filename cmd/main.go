@@ -7,7 +7,6 @@ import (
 	"moviesApi/internal/models"
 	"moviesApi/internal/repository"
 	"moviesApi/internal/service"
-	// "time"
 )
 
 func main() {
@@ -28,7 +27,7 @@ func main() {
 	repo := repository.NewActorRepository(db)
 	actorService := service.NewActorService(repo)
 	actor := &models.Actor{
-		Name:      "",
+		Name:      "test",
 		BirthDate: "1978-07-09",
 	}
 	err = actorService.CreateActor(actor)
@@ -36,7 +35,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("data: %+v\n", actor)
+	// fmt.Printf("data: %+v\n", actor)
 
 	// err = repo.DeleteActors(5)
 	// actor.Name = "Yeab Hanks"
@@ -46,10 +45,10 @@ func main() {
 	// 	log.Fatal(err)
 	// }
 
-	// updatedActor, err := repo.FindById(actor.Id)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	updatedActor, err := repo.FindByName("")
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	// fmt.Printf("After Update: %+v\n", actor)
+	fmt.Printf("After Update: %+v\n", updatedActor)
 }
