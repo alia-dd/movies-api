@@ -6,6 +6,7 @@ import (
 	"moviesApi/internal/database"
 	"moviesApi/internal/models"
 	"moviesApi/internal/repository"
+	"moviesApi/internal/service"
 	// "time"
 )
 
@@ -15,28 +16,29 @@ func main() {
 		log.Fatal(err)
 	}
 	defer db.Close()
+
 	err = database.NewTable(db)
 	if err != nil {
 		log.Fatal(err)
 
 	}
+
 	fmt.Println("table created")
 
 	repo := repository.NewActorRepository(db)
-
+	actorService := service.NewActorService(repo)
 	actor := &models.Actor{
-		Name:      "whaaaat Hanks",
-		BirthDate: "1956-07-09",
+		Name:      "",
+		BirthDate: "1978-07-09",
 	}
-
-	err = repo.CreateActor(actor)
+	err = actorService.CreateActor(actor)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("Before Update: %+v\n", actor)
+	fmt.Printf("data: %+v\n", actor)
 
-	err = repo.DeleteActors(5)
+	// err = repo.DeleteActors(5)
 	// actor.Name = "Yeab Hanks"
 
 	// err = repo.Update(actor)
