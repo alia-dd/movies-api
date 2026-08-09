@@ -3,6 +3,7 @@ package service
 import (
 	"moviesApi/internal/models"
 	"moviesApi/internal/repository"
+	"time"
 )
 
 type ActorService struct {
@@ -19,13 +20,20 @@ func (s *ActorService) CreateActor(actor *models.Actor) error {
 	if actor.Name == "" || actor.BirthDate == "" {
 		return repository.ErrInvalidInput
 	}
-
+	_, err := time.Parse("2006-01-02", actor.BirthDate)
+	if err != nil{
+		return repository.ErrInvalidInput
+	}
 	return s.repo.CreateActor(actor)
 
 }
 
 func (s *ActorService) UpdateActor(actor *models.Actor) error {
 	if actor.Name == "" || actor.BirthDate == "" {
+		return repository.ErrInvalidInput
+	}
+	_, err := time.Parse("2006-01-02", actor.BirthDate)
+	if err != nil{
 		return repository.ErrInvalidInput
 	}
 	return s.repo.Update(actor)
