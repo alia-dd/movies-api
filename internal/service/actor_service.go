@@ -25,7 +25,7 @@ func (s *ActorService) CreateActor(actor *models.Actor) error {
 }
 
 func (s *ActorService) UpdateActor(actor *models.Actor) error {
-	if actor.Name == "" {
+	if actor.Name == "" || actor.BirthDate == "" {
 		return repository.ErrInvalidInput
 	}
 	return s.repo.Update(actor)
@@ -48,5 +48,8 @@ func (s *ActorService) DeleteActorsById(id int) error {
 	return s.repo.DeleteActorsById(id)
 }
 func (s *ActorService) DeleteActorsByName(name string) error {
+	if name == "" {
+		return repository.ErrInvalidInput
+	}
 	return s.repo.DeleteActorsByName(name)
 }

@@ -38,14 +38,19 @@ func (h *ActorHandler) CreateActor(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ActorHandler) UpdateActor(w http.ResponseWriter, r *http.Request) {
-
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil{
+		http.Error(w, "invalid actor id", http.StatusBadRequest)
+		return
+	}
 	var actor models.Actor
 
-	err := json.NewDecoder(r.Body).Decode(&actor)
+	err = json.NewDecoder(r.Body).Decode(&actor)
 	if err != nil {
 		http.Error(w, "invalid JSON", http.StatusBadRequest)
 		return
 	}
+	actor.Id = id
 	err = h.service.UpdateActor(&actor)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -87,7 +92,7 @@ func (h *ActorHandler) GetActorsById(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(actors)
 }
 
-func (h *ActorHandler) GetByName(w http.ResponseWriter, r *http.Request) {
+func (h *ActorHandler) GetActorByName(w http.ResponseWriter, r *http.Request) {
 
 	name := r.PathValue("name")
 
