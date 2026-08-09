@@ -2,7 +2,11 @@ package repository
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
 	"movies-api/internal/models"
+	"strconv"
+	"strings"
 )
 
 type DatabaseConnection struct {
@@ -13,8 +17,41 @@ type DatabaseConnection struct {
 func NewdbConnection(db *sql.DB) *DatabaseConnection {
 	return &DatabaseConnection{DB: db}
 }
-func (c *DatabaseConnection) Get() ([]models.Movies, error) {
-	rows, rowErr := c.DB.Query("SELECT * FROM movie")
+func (c *DatabaseConnection) Get(f models.Filter) ([]models.Movies, error) {
+	query := `SELECT m.id, m.title, m.releaseYear, m.duration, m.overview, m.originalLanguage, m.created_at, m.updated_at FROM movie m`
+	extraQuery := []string{}
+	arg := []any{}
+
+	if f.Genre != "" {
+		query += ` JOIN movie_genre mg ON m.id = mg.movieId `
+		extraQuery = append(extraQuery, ` mg.genreId=?`)
+		arg = append(arg, f.Genre)
+	}
+	if f.Actor != "" {
+		query += ` JOIN movie_actor ma ON m.id  = ma.movieId`
+		extraQuery = append(extraQuery, `ma.actorId = ? `)
+		arg = append(arg, f.Actor)
+	}
+	if f.Year != "" {
+		extraQuery = append(extraQuery, ` m.releaseYear = ? `)
+		arg = append(arg, f.Year)
+	}
+	if len(extraQuery) > 0 {
+		query += " WHERE " + strings.Join(extraQuery, " AND ")
+	}
+	page, _ := strconv.Atoi(f.Page)
+	size, _ := strconv.Atoi(f.Size)
+	if f.Size != "" {
+		query += `Limit = ? `
+		arg = append(arg, size)
+	}
+	if f.Page != "" {
+
+		query += `OFFSET = ? `
+		arg = append(arg, page*size)
+	}
+
+	rows, rowErr := c.DB.Query(query, arg...)
 	if rowErr != nil {
 		return nil, rowErr
 	}
@@ -23,18 +60,19 @@ func (c *DatabaseConnection) Get() ([]models.Movies, error) {
 
 	for rows.Next() {
 		movie := models.Movies{}
-		err := rows.Scan(&movie.Id, &movie.Title, &movie.ReleaseYear, &movie.Duration, &movie.CreatedAt, &movie.UpdatedAt)
+		err := rows.Scan(&movie.Id, &movie.Title, &movie.ReleaseYear, &movie.Duration, &movie.Overview, &movie.OriginalLanguage, &movie.CreatedAt, &movie.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
 		movies = append(movies, movie)
 	}
-	// if rowErr == sql.ErrNoRows {
-	// 	return nil, rowErr
-	// }
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
 	return movies, nil
 }
+
 func (c *DatabaseConnection) GetById(id int) (*models.Movies, error) {
 	row := c.DB.QueryRow("SELECT FROM movie WHERE id=? ", id)
 	movie := models.Movies{}
@@ -61,7 +99,15 @@ func (c *DatabaseConnection) Post() {
 func (c *DatabaseConnection) Patch() {
 }
 
-func (c *DatabaseConnection) Delete(id int) (int64, error) {
+func (c *DatabaseConnection) Delete(id int, force bool) (int64, error) {
+	if !force {
+		payload, payloadErr := c.GetById(id)
+		if payloadErr != nil {
+			return 0, payloadErr
+		}
+		err := fmt.Sprintf("Cannot delete Movie %s because it has %d associated actors and %d associated genres.", payload.Title, len(payload.ActorId), len(payload.GenreId))
+		return 0, errors.New(err)
+	}
 	rows, deleteErr := c.DB.Exec("DELETE FROM movie WHERE id=?", id)
 	if deleteErr != nil {
 		return 0, deleteErr

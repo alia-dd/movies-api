@@ -4,6 +4,8 @@ import (
 	"log"
 	"movies-api/internal/models"
 	"movies-api/internal/repository"
+	"strconv"
+	"time"
 )
 
 type MovieService struct {
@@ -15,8 +17,35 @@ func NewMovieService(repo *repository.DatabaseConnection) *MovieService {
 	return &MovieService{repo: repo}
 }
 
-func (s *MovieService) GetMovie() ([]models.Movies, error) {
-	payload, err := s.repo.Get()
+func (s *MovieService) GetMovie(f models.Filter) ([]models.Movies, error) {
+	genreID, err := strconv.Atoi(f.Genre)
+	if err != nil || genreID < 0 {
+		log.Printf("Invalid Genre ID: Genre must be zero or a positive integer")
+		f.Genre = ""
+	}
+	year, err := strconv.Atoi(f.Year)
+	if err != nil || year < 1888 || year > time.Now().Year() {
+		log.Printf("Invalid Yead")
+		f.Year = ""
+	}
+	ActorID, err := strconv.Atoi(f.Actor)
+	if err != nil || ActorID < 0 {
+		log.Printf("Invalid Genre ID: Genre must be zero or a positive integer")
+		f.Actor = ""
+	}
+
+	page, err := strconv.Atoi(f.Page)
+	if err != nil || page <= 0 {
+		log.Printf("Invalid page number")
+		f.Page = ""
+	}
+	size, err := strconv.Atoi(f.Size)
+	if err != nil || size <= 0 {
+		log.Printf("Invalid size number")
+		f.Size = ""
+	}
+
+	payload, err := s.repo.Get(f)
 	return payload, err
 }
 
@@ -29,8 +58,13 @@ func (s *MovieService) GetMovieByTitle(actorName string) (*models.Movies, error)
 	return payload, err
 }
 
-func (s *MovieService) DeleteMovie(id int) error {
-	affectedR, err := s.repo.Delete(id)
+func (s *MovieService) DeleteMovie(id int, force string) error {
+	forcebool, forceErr := strconv.ParseBool(force)
+	if forceErr != nil {
+		log.Printf("force must be a boolean")
+		return forceErr
+	}
+	affectedR, err := s.repo.Delete(id, forcebool)
 	if err != nil {
 		log.Printf("Failed to delete movie with id = %d \n Error: %v", id, err)
 		return err

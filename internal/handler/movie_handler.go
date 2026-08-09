@@ -18,9 +18,17 @@ func NewHandler(service *service.MovieService) *Handler {
 }
 
 func (h *Handler) GetMovies(w http.ResponseWriter, r *http.Request) {
-	payload, err := h.service.GetMovie()
+
+	var f models.Filter
+	f.Genre = r.URL.Query().Get("genre")
+	f.Actor = r.URL.Query().Get("actor")
+	f.Year = r.URL.Query().Get("year")
+	f.Page = r.URL.Query().Get("page")
+	f.Size = r.URL.Query().Get("size")
+
+	payload, err := h.service.GetMovie(f)
 	if err == sql.ErrNoRows {
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusNoContent)
 		return
 	} else if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -46,7 +54,10 @@ func (h *Handler) GetMoviesById(w http.ResponseWriter, r *http.Request) {
 		payload, err = h.service.GetMovieById(id)
 	}
 
-	if err != nil {
+	if err == sql.ErrNoRows {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	} else if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -78,12 +89,19 @@ func PatchMovie(w http.ResponseWriter, r *http.Request) {
 
 // delete the movie with given id
 func (h *Handler) DeleteMovie(w http.ResponseWriter, r *http.Request) {
+
+	val := r.URL.Query().Get("force")
+
 	id, idErr := strconv.Atoi(r.PathValue("id"))
 	if idErr != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	if deleteErr := h.service.DeleteMovie(id); deleteErr != nil {
+	if deleteErr := h.service.DeleteMovie(id, val); deleteErr != nil {
+		if deleteErr == sql.ErrNoRows {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}

@@ -16,7 +16,7 @@ type dbData struct {
 func route() (http.Handler, error) {
 	mux := http.NewServeMux()
 
-	db, dbErr := database.InitializeDB("movie.db")
+	db, dbErr := database.InitializeDB("internal/database/data/movie.db")
 	if dbErr != nil {
 		return nil, dbErr
 	}
