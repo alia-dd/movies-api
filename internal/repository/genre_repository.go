@@ -81,11 +81,31 @@ func (r *GenreRepository) GetGenreByID(id int) (*models.Genre,error) {
 	return &genre,nil
 }
 
+func (r *GenreRepository) UpdateGenre(id int, name string) error {
+	query := `UPDATE genres SET name = ?, updated_at = CURRENT_TIME_STAMP WHERE id = ?`
+	result,err := r.db.Exec(query,name,id)
+	if err != nil {
+		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
+			return ErrDuplicateKey
+		}
+		return err
+	}
+
+	rows,err := result.RowsAffected() //affected number of rows
+	if err !=nil {
+		return err
+	}
+	if rows == 0 {
+		return ErrNotFound
+	}
+
+	return nil
+}
+
 /*
 
 
 func(r *GenreRepository) GetAllMoviesByGenre(id int) {}
 
-func (r *GenreRepository) UpdateGenre(id int, name string) error {}
 
 func(r *GenreRepository) DeleteGenre(id int)error {}*/
