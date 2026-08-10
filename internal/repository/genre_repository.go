@@ -98,7 +98,6 @@ func (r *GenreRepository) UpdateGenre(id int, name string) error {
 	if rows == 0 {
 		return ErrNotFound
 	}
-
 	return nil
 }
 
