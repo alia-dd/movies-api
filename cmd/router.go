@@ -16,17 +16,17 @@ func route() (http.Handler, error) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.Close()
+	//defer db.Close() needs to be removed or server closes early 
 
 	err = database.NewTable(db)
 
 	if err != nil {
 		log.Fatal(err)
 	}
-	repo := repository.NewActorRepository(db)
 
-	actorService := service.NewActorService(repo)
-
+	//actor routes
+	actorRepo := repository.NewActorRepository(db)
+	actorService := service.NewActorService(actorRepo)
 	actorHandler := handler.NewActorHandler(actorService)
 
 	mux.HandleFunc("POST /api/actors", actorHandler.CreateActor)
@@ -36,6 +36,18 @@ func route() (http.Handler, error) {
 	mux.HandleFunc("GET /api/actors/name/{name}", actorHandler.GetActorByName)
 	mux.HandleFunc("DELETE /api/actors/{id}", actorHandler.DeleteActorsById)
 	mux.HandleFunc("DELETE /api/actors/name/{name}", actorHandler.DeleteActorsByName)
+	
+	// Genre routes
+	genreRepo := repository.NewGenreRepository(db)
+	genreService := service.NewGenreService(genreRepo)
+	genreHandler := handler.NewGenreHandler(genreService)
+
+	mux.HandleFunc("POST /api/genres", genreHandler.CreateGenre)
+	mux.HandleFunc("GET /api/genres", genreHandler.GetAllGenres)
+	mux.HandleFunc("GET /api/genres/{id}", genreHandler.GetGenreByID)
+	mux.HandleFunc("PUT /api/genres/{id}", genreHandler.UpdateGenre)
+	mux.HandleFunc("DELETE /api/genres/{id}", genreHandler.DeleteGenreByID)
+	mux.HandleFunc("DELETE /api/genres/name/{name}", genreHandler.DeleteGenreByName)
 
 	return mux, nil
 }
