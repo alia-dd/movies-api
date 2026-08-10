@@ -1,0 +1,3 @@
+*.db-wal
+*.db-shm
+movies.db
