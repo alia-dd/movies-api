@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"movies-api/internal/database"
 	"movies-api/internal/handler"
 	"movies-api/internal/repository"
@@ -25,6 +26,14 @@ func route() (http.Handler, error) {
 	if movieTableErr != nil {
 		return nil, movieTableErr
 	}
+	err := database.NewTable(db)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	repo := repository.NewActorRepository(db)
+	actorService := service.NewActorService(repo)
+	actorHandler := handler.NewActorHandler(actorService)
 
 	movieRepo := repository.NewdbConnection(db)
 	movieService := service.NewMovieService(movieRepo)
@@ -33,13 +42,18 @@ func route() (http.Handler, error) {
 	// these endpoints call the movies entity handler
 	mux.HandleFunc("POST /api/movies", handler.PostMovie)
 	mux.HandleFunc("GET /api/movies", movieHandler.GetMovies)
-
 	mux.HandleFunc("GET /api/movies/{id}", movieHandler.GetMoviesById)
-
 	mux.HandleFunc("PATCH /api/movies/{id}", handler.PatchMovie)
 	mux.HandleFunc("DELETE /api/movies/{id}", movieHandler.DeleteMovie)
-
 	mux.HandleFunc("GET /api/movies/{movieId}/actors", movieHandler.GetActorsForMovie) // get all actor in selected movie
+
+	mux.HandleFunc("POST /api/actors", actorHandler.CreateActor)
+	mux.HandleFunc("PUT /api/actors/{id}", actorHandler.UpdateActor)
+	mux.HandleFunc("GET /api/actors", actorHandler.GetAllActors)
+	mux.HandleFunc("GET /api/actors/{id}", actorHandler.GetActorsById)
+	mux.HandleFunc("GET /api/actors/name/{name}", actorHandler.GetActorByName)
+	mux.HandleFunc("DELETE /api/actors/{id}", actorHandler.DeleteActorsById)
+	mux.HandleFunc("DELETE /api/actors/name/{name}", actorHandler.DeleteActorsByName)
 
 	return mux, nil
 }

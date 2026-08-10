@@ -20,6 +20,14 @@ var scheme = `
     updated_at 			DATETIME DEFAULT CURRENT_TIMESTAMP
 	);
 
+	CREATE TABLE IF NOT EXISTS ACTORS(
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	name TEXT NOT NULL UNIQUE,
+	birthdate TEXT NOT NULL,
+	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+	updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	);
+
 	CREATE TABLE IF NOT EXISTS movie_genre(
 	genreId      		INTEGER NOT NULL,
 	movieId      		INTEGER NOT NULL,
@@ -32,7 +40,7 @@ var scheme = `
 	movieId      		INTEGER NOT NULL,
 	PRIMARY KEY (movieId, actorId),
     FOREIGN KEY (movieId) REFERENCES movie (id) ,
-	FOREIGN KEY (actorId) REFERENCES actor (id) 
+	FOREIGN KEY (actorId) REFERENCES ACTORS (id) 
 	);
 
 `
@@ -57,6 +65,21 @@ func InitializeMovieTable(db *sql.DB) error {
 
 	return nil
 }
+func tableExist(db *sql.DB) bool {
+	var count int
+	query := `SELECT count(*) FROM sqlite_master WHERE name ='movie' and type='table'`
+	err := db.QueryRow(query).Scan(&count)
+	if err != nil || count <= 0 {
+		return false
+	}
+	return true
+}
+
+func NewTable(db *sql.DB) error {
+	_, err := db.Exec(scheme)
+	return err
+}
+
 func seedData(db *sql.DB) error {
 	var movies []models.Movies
 	query := ` INSERT INTO movie (Title, ReleaseYear, Duration, Overview, OriginalLanguage, GenreId ,ActorId)VALUES (?, ?, ?, ?, ?, ?, ?)`
@@ -99,14 +122,4 @@ func seedData(db *sql.DB) error {
 	}
 
 	return nil
-}
-
-func tableExist(db *sql.DB) bool {
-	var count int
-	query := `SELECT count(*) FROM sqlite_master WHERE name ='movie' and type='table'`
-	err := db.QueryRow(query).Scan(&count)
-	if err != nil || count <= 0 {
-		return false
-	}
-	return true
 }
