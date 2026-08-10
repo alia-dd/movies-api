@@ -102,10 +102,36 @@ func (r *GenreRepository) UpdateGenre(id int, name string) error {
 	return nil
 }
 
-/*
 
+func(r *GenreRepository) DeleteGenreByID(id int)error {
+	query := `DELETE FROM genres WHERE id = ?`
+	result,err := r.db.Exec(query,id)
+	if err != nil {
+		return err
+	}
+	rows,err := result.RowsAffected()
+	if err != nil {
+		return err
+	} 
+	if rows == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
 
-func(r *GenreRepository) GetAllMoviesByGenre(id int) {}
+func(r *GenreRepository) DeleteGenreByName(name string)error {
+	query := `DELETE FROM genres WHERE name = ?`
+	result,err := r.db.Exec(query,name)
+	if err != nil {
+		return err
+	}
+	rows,err := result.RowsAffected()
+	if err != nil {
+		return err
+	} 
+	if rows == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
 
-
-func(r *GenreRepository) DeleteGenre(id int)error {}*/
