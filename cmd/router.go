@@ -16,7 +16,7 @@ func route() (http.Handler, error) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// defer db.Close()
+	defer db.Close()
 
 	err = database.NewTable(db)
 
