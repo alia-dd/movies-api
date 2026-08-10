@@ -39,7 +39,7 @@ func (r *GenreRepository) CreateGenre(genre *models.Genre) error {
 
 	/*
 		line 42 : why
-		if not used the fetch data in stdout create and update times show default time
+		if not used the fetched data in stdout create and update times show default time
 		{"id":3,"name":"Drama","createdAt":"0001-01-01T00:00:00Z","updatedAt":"0001-01-01T00:00:00Z"}
 		to update our data
 		we fetch the row from db by id
@@ -68,9 +68,21 @@ func (r *GenreRepository) GetAllGenres() ([]models.Genre, error) {
 	return genres,rows.Err()
 }
 
+func (r *GenreRepository) GetGenreByID(id int) (*models.Genre,error) {
+	query := `SELECT * WHERE id = ?`
+	var genre models.Genre
+	err :=r.db.QueryRow(query,id).Scan(&genre.Id,&genre.Name,&genre.CreatedAt,&genre.UpdatedAt)
+	if err == sql.ErrNoRows{
+		return nil,ErrNotFound
+	}
+	if err !=nil {
+		return nil,err
+	}
+	return &genre,nil
+}
+
 /*
 
-func (r *GenreRepository) GetGenreByID(id int) (*models.Genre,error) {}
 
 func(r *GenreRepository) GetAllMoviesByGenre(id int) {}
 
