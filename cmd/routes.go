@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"movies-api/internal/database"
 	"movies-api/internal/handler"
 	"movies-api/internal/repository"
@@ -26,10 +25,10 @@ func route() (http.Handler, error) {
 	if movieTableErr != nil {
 		return nil, movieTableErr
 	}
-	err := database.NewTable(db)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// err := database.NewTable(db)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
 	repo := repository.NewActorRepository(db)
 	actorService := service.NewActorService(repo)
@@ -40,7 +39,7 @@ func route() (http.Handler, error) {
 	movieHandler := handler.NewHandler(movieService)
 
 	// these endpoints call the movies entity handler
-	mux.HandleFunc("POST /api/movies", handler.PostMovie)
+	mux.HandleFunc("POST /api/movies", movieHandler.PostMovie)
 	mux.HandleFunc("GET /api/movies", movieHandler.GetMovies)
 	mux.HandleFunc("GET /api/movies/{id}", movieHandler.GetMoviesById)
 	mux.HandleFunc("PATCH /api/movies/{id}", handler.PatchMovie)

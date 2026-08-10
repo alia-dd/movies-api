@@ -10,7 +10,7 @@ import (
 
 var scheme = `
 	CREATE TABLE IF NOT EXISTS movie(
-	id 					INTEGER PRIMARY KEY AUTOINCREMENT, 
+	id 					INTEGER PRIMARY KEY AUTOINCREMENT,
 	title       		TEXT NOT NULL UNIQUE,
 	releaseYear 		INTEGER NOT NULL,
 	duration    		INTEGER,
@@ -26,6 +26,11 @@ var scheme = `
 	birthdate TEXT NOT NULL,
 	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 	updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	);
+
+	CREATE TABLE IF NOT EXISTS genre(
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	name TEXT NOT NULL UNIQUE,
 	);
 
 	CREATE TABLE IF NOT EXISTS movie_genre(
@@ -75,10 +80,10 @@ func tableExist(db *sql.DB) bool {
 	return true
 }
 
-func NewTable(db *sql.DB) error {
-	_, err := db.Exec(scheme)
-	return err
-}
+// func NewTable(db *sql.DB) error {
+// 	_, err := db.Exec(scheme)
+// 	return err
+// }
 
 func seedData(db *sql.DB) error {
 	var movies []models.Movies

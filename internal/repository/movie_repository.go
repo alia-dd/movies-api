@@ -39,14 +39,15 @@ func (c *DatabaseConnection) Get(f models.Filter) ([]models.Movies, error) {
 	if len(extraQuery) > 0 {
 		query += " WHERE " + strings.Join(extraQuery, " AND ")
 	}
-	page, _ := strconv.Atoi(f.Page)
-	size, _ := strconv.Atoi(f.Size)
+
+	size, page := 0, 0
 	if f.Size != "" {
+		size, _ = strconv.Atoi(f.Size)
 		query += `Limit = ? `
 		arg = append(arg, size)
 	}
 	if f.Page != "" {
-
+		page, _ = strconv.Atoi(f.Page)
 		query += `OFFSET = ? `
 		arg = append(arg, page*size)
 	}
@@ -93,7 +94,29 @@ func (c *DatabaseConnection) GetByTitle(actorName string) (*models.Movies, error
 	return &movie, nil
 }
 
-func (c *DatabaseConnection) Post() {
+func (c *DatabaseConnection) Post(m models.Movies) error {
+	query := ` INSERT INTO movie (Title, ReleaseYear, Duration, Overview, OriginalLanguage, GenreId ,ActorId)VALUES (?, ?, ?, ?, ?, ?, ?)`
+	mgQuery := `INSERT INTO movie_genre (movieId, genreId) VALUES (?, ?)`
+	maQuery := `INSERT INTO movie_actor (movieId, actorId) VALUES (?, ?)`
+	res, postErr := c.DB.Exec(query, m.Title, m.ReleaseYear, m.Duration, m.Overview, m.OriginalLanguage, m.GenreId, m.ActorId)
+	if postErr != nil {
+
+	}
+	movieID, resErr := res.LastInsertId()
+	if resErr != nil {
+		return fmt.Errorf("failed to retreive last inserted movie id: %w", resErr)
+	}
+	for _, genreID := range m.GenreId {
+		if _, mgErr := c.DB.Exec(mgQuery, movieID, genreID); mgErr != nil {
+			return fmt.Errorf("failed to link genre %d to movie %q: %w", genreID, m.Title, mgErr)
+		}
+	}
+	for _, actorID := range m.ActorId {
+		if _, maErr := c.DB.Exec(maQuery, movieID, actorID); maErr != nil {
+			return fmt.Errorf("failed to link actor %d to movie %q: %w", actorID, m.Title, maErr)
+		}
+	}
+	return nil
 }
 
 func (c *DatabaseConnection) Patch() {

@@ -17,7 +17,7 @@ type Movies struct {
 	Title       string `json:"title"`
 	ReleaseYear int    `json:"release_date"`
 
-	Duration         int    `json:"duration"`
+	Duration         uint16 `json:"duration"`
 	Overview         string `json:"overview"`
 	OriginalLanguage string `json:"original_language"`
 
