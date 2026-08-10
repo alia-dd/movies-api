@@ -69,7 +69,7 @@ func (r *GenreRepository) GetAllGenres() ([]models.Genre, error) {
 }
 
 func (r *GenreRepository) GetGenreByID(id int) (*models.Genre,error) {
-	query := `SELECT * WHERE id = ?`
+	query := `SELECT * FROM genres WHERE id = ?`
 	var genre models.Genre
 	err :=r.db.QueryRow(query,id).Scan(&genre.Id,&genre.Name,&genre.CreatedAt,&genre.UpdatedAt)
 	if err == sql.ErrNoRows{
@@ -82,7 +82,7 @@ func (r *GenreRepository) GetGenreByID(id int) (*models.Genre,error) {
 }
 
 func (r *GenreRepository) UpdateGenre(id int, name string) error {
-	query := `UPDATE genres SET name = ?, updated_at = CURRENT_TIME_STAMP WHERE id = ?`
+	query := `UPDATE genres SET name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
 	result,err := r.db.Exec(query,name,id)
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
@@ -119,7 +119,7 @@ func(r *GenreRepository) DeleteGenreByID(id int)error {
 	return nil
 }
 
-func(r *GenreRepository) DeleteGenreByName(name string)error {
+func(r *GenreRepository) DeleteGenreByName(name string) error {
 	query := `DELETE FROM genres WHERE name = ?`
 	result,err := r.db.Exec(query,name)
 	if err != nil {
@@ -134,4 +134,3 @@ func(r *GenreRepository) DeleteGenreByName(name string)error {
 	}
 	return nil
 }
-
