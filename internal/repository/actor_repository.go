@@ -12,7 +12,6 @@ var (
 	ErrNotFound     = errors.New("record Not Found")
 	ErrDuplicateKey = errors.New("duplicate key violaion")
 	ErrInvalidInput = errors.New("Invalid Input")
-
 )
 
 type ActorsRepository struct {
@@ -35,11 +34,8 @@ func (r *ActorsRepository) CreateActor(actor *models.Actor) error {
 	now := time.Now()
 	result, err := r.db.Exec(query, actor.Name, actor.BirthDate)
 	if err != nil {
-		if err != nil {
-			if strings.Contains(err.Error(), "UNIQUE constraint failed") {
-				return ErrDuplicateKey
-			}
-			return err
+		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
+			return ErrDuplicateKey
 		}
 		return err
 	}
