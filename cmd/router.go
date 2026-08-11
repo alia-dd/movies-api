@@ -16,11 +16,10 @@ func route() (http.Handler, error) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	//defer db.Close() needs to be removed or server closes early 
-
+	
 	err = database.NewTable(db)
-
 	if err != nil {
+		db.Close()
 		log.Fatal(err)
 	}
 
