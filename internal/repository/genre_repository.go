@@ -60,32 +60,40 @@ func (r *GenreRepository) GetAllGenres() ([]models.Genre, error) {
 	for rows.Next() {
 		var genre models.Genre
 		err := rows.Scan(&genre.Id, &genre.Name, &genre.CreatedAt, &genre.UpdatedAt)
-		if err !=nil {
-			return nil,err
+		if err != nil {
+			return nil, err
 		}
-		genres =append(genres,genre)
+		genres = append(genres, genre)
 	}
-	return genres,rows.Err()
+	return genres, rows.Err()
 }
 
-func (r *GenreRepository) GetGenreByID(id int) (*models.Genre,error) {
+func (r *GenreRepository) GetGenreByID(id int) (*models.Genre, error) {
 	query := `SELECT * FROM genres WHERE id = ?`
 	var genre models.Genre
-	err :=r.db.QueryRow(query,id).Scan(&genre.Id,&genre.Name,&genre.CreatedAt,&genre.UpdatedAt)
-	if err == sql.ErrNoRows{
-		return nil,ErrNotFound
+	err := r.db.QueryRow(query, id).Scan(&genre.Id, &genre.Name, &genre.CreatedAt, &genre.UpdatedAt)
+	if err == sql.ErrNoRows {
+		return nil, ErrNotFound
 	}
-	if err !=nil {
-		return nil,err
-	}
-	return &genre,nil
-}
-
-func (r *GenreRepository) GetGenreByName(search string)([]models.Genre,error) {
-	query := `SELECT * FROM genres WHERE name LIKE ?` //LIKE case insenstive GLOB is case sensitive
-	rows, err := r.db.Query(query,"%"+search+"%")
 	if err != nil {
 		return nil, err
+	}
+	return &genre, nil
+}
+
+func (r *GenreRepository) SearchGenreByName(search string,page,limit int) ([]models.Genre, int, error) {
+	countQuery := `SELECT COUNT(*) FROM genres WHERE name LIKE ?`
+	var total int
+	err := r.db.QueryRow(countQuery, "%"+search+"%").Scan(&total)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	offset := (page-1)* limit
+	query := `SELECT * FROM genres WHERE name LIKE ? LIMIT ? OFFSET ?` //LIKE case insenstive GLOB is case sensitive
+	rows, err := r.db.Query(query, "%"+search+"%", limit,offset)
+	if err != nil {
+		return nil,0, err
 	}
 	defer rows.Close()
 
@@ -93,18 +101,17 @@ func (r *GenreRepository) GetGenreByName(search string)([]models.Genre,error) {
 	for rows.Next() {
 		var genre models.Genre
 		err := rows.Scan(&genre.Id, &genre.Name, &genre.CreatedAt, &genre.UpdatedAt)
-		if err !=nil {
-			return nil,err
+		if err != nil {
+			return nil, 0,err
 		}
-		genres =append(genres,genre)
+		genres = append(genres, genre)
 	}
-	return genres,rows.Err()
+	return genres,total,rows.Err()
 }
-
 
 func (r *GenreRepository) UpdateGenre(id int, name string) error {
 	query := `UPDATE genres SET name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
-	result,err := r.db.Exec(query,name,id)
+	result, err := r.db.Exec(query, name, id)
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
 			return ErrDuplicateKey
@@ -112,8 +119,8 @@ func (r *GenreRepository) UpdateGenre(id int, name string) error {
 		return err
 	}
 
-	rows,err := result.RowsAffected() //affected number of rows
-	if err !=nil {
+	rows, err := result.RowsAffected() //affected number of rows
+	if err != nil {
 		return err
 	}
 	if rows == 0 {
@@ -122,33 +129,32 @@ func (r *GenreRepository) UpdateGenre(id int, name string) error {
 	return nil
 }
 
-
-func(r *GenreRepository) DeleteGenreByID(id int)error {
+func (r *GenreRepository) DeleteGenreByID(id int) error {
 	query := `DELETE FROM genres WHERE id = ?`
-	result,err := r.db.Exec(query,id)
+	result, err := r.db.Exec(query, id)
 	if err != nil {
 		return err
 	}
-	rows,err := result.RowsAffected()
+	rows, err := result.RowsAffected()
 	if err != nil {
 		return err
-	} 
+	}
 	if rows == 0 {
 		return ErrNotFound
 	}
 	return nil
 }
 
-func(r *GenreRepository) DeleteGenreByName(name string) error {
+func (r *GenreRepository) DeleteGenreByName(name string) error {
 	query := `DELETE FROM genres WHERE name = ?`
-	result,err := r.db.Exec(query,name)
+	result, err := r.db.Exec(query, name)
 	if err != nil {
 		return err
 	}
-	rows,err := result.RowsAffected()
+	rows, err := result.RowsAffected()
 	if err != nil {
 		return err
-	} 
+	}
 	if rows == 0 {
 		return ErrNotFound
 	}

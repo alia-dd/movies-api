@@ -60,6 +60,59 @@ func (h *GenreHandler) GetAllGenres(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(genres)
 }
 
+func (h *GenreHandler) SearchGenreByName(w http.ResponseWriter, r *http.Request) {
+	pageStr := r.URL.Query().Get("page")
+	if pageStr == "" {
+		pageStr = "1"
+	}
+
+	limitStr := r.URL.Query().Get("limit")
+	if limitStr == "" {
+		limitStr = "10"
+	}
+
+	page, err := strconv.Atoi(pageStr)
+	if err != nil {
+		http.Error(w, "invalid page input", http.StatusBadRequest)
+		return
+	}
+
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil {
+		http.Error(w, "invalid limit input", http.StatusBadRequest)
+		return
+	}
+
+	if page <= 0 || limit <= 0 {
+		http.Error(w, "page and limit must be greater than 0", http.StatusBadRequest)
+		return
+	}
+
+	search := r.URL.Query().Get("search")
+	if search == "" {
+		http.Error(w, "search query cannot be empty", http.StatusBadRequest)
+		return
+	}
+
+	genres, total, err := h.genreService.SearchGenreByName(search, page, limit)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"data": genres,
+		"pagination": map[string]int{
+			"page":        page,
+			"limit":       limit,
+			"total":       total,
+			"total_pages": (total + limit - 1) / limit,
+		},
+	})
+}
+
 func (h *GenreHandler) GetGenreByID(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {

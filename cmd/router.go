@@ -47,6 +47,7 @@ func route() (http.Handler, error) {
 	mux.HandleFunc("PUT /api/genres/{id}", genreHandler.UpdateGenre)
 	mux.HandleFunc("DELETE /api/genres/{id}", genreHandler.DeleteGenreByID)
 	mux.HandleFunc("DELETE /api/genres/name/{name}", genreHandler.DeleteGenreByName)
+	mux.HandleFunc("GET /api/genres/search", genreHandler.SearchGenreByName)
 
 	return mux, nil
 }
