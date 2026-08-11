@@ -16,8 +16,8 @@ type MovieRepository struct {
 func NewMovieRepository(db *sql.DB) *MovieRepository {
 	return &MovieRepository{DB: db}
 }
-func (c *MovieRepository) Get(f models.Filter) ([]models.Movies, error) {
-	query := `SELECT m.id, m.title, m.releaseYear, m.duration, m.overview, m.originalLanguage, m.created_at, m.updated_at FROM movie m`
+func (r *MovieRepository) Get(f models.Filter) ([]models.Movies, error) {
+	query := `SELECT m.id, m.title, m.releaseYear, m.duration, m.overview, m.originalLanguage, m.created_at, m.updated_at FROM MOVIES m`
 	extraQuery := []string{}
 	arg := []any{}
 
@@ -39,19 +39,25 @@ func (c *MovieRepository) Get(f models.Filter) ([]models.Movies, error) {
 		query += " WHERE " + strings.Join(extraQuery, " AND ")
 	}
 
-	size, page := 0, 0
+	size, page := -1, 1
 	if f.Size != "" {
-		size, _ = strconv.Atoi(f.Size)
-		query += `Limit = ? `
-		arg = append(arg, size)
+		if s, err := strconv.Atoi(f.Size); err != nil {
+			size = s
+		}
 	}
 	if f.Page != "" {
 		page, _ = strconv.Atoi(f.Page)
-		query += `OFFSET = ? `
-		arg = append(arg, page*size)
+		if p, err := strconv.Atoi(f.Page); err != nil {
+			page = p
+		}
+	}
+	if size > -1 {
+		query += ` Limit ?  OFFSET ? `
+		arg = append(arg, size, page-1*size)
+
 	}
 
-	rows, rowErr := c.DB.Query(query, arg...)
+	rows, rowErr := r.DB.Query(query, arg...)
 	if rowErr != nil {
 		return nil, rowErr
 	}
@@ -73,8 +79,8 @@ func (c *MovieRepository) Get(f models.Filter) ([]models.Movies, error) {
 	return movies, nil
 }
 
-func (c *MovieRepository) GetById(id int) (*models.Movies, error) {
-	row := c.DB.QueryRow("SELECT id, title, releaseYear, duration, overview, originalLanguage, created_at, updated_at FROM movie WHERE id=? ", id)
+func (r *MovieRepository) GetById(id int) (*models.Movies, error) {
+	row := r.DB.QueryRow("SELECT id, title, releaseYear, duration, overview, originalLanguage, created_at, updated_at FROM MOVIES WHERE id=? ", id)
 	movie := models.Movies{}
 	err := row.Scan(&movie.Id, &movie.Title, &movie.ReleaseYear, &movie.Duration, &movie.Overview, &movie.OriginalLanguage, &movie.CreatedAt, &movie.UpdatedAt)
 	if err != nil {
@@ -82,8 +88,8 @@ func (c *MovieRepository) GetById(id int) (*models.Movies, error) {
 	}
 	return &movie, nil
 }
-func (c *MovieRepository) GetByTitle(actorName string) (*models.Movies, error) {
-	row := c.DB.QueryRow("SELECT id, title, releaseYear, duration, overview, originalLanguage, created_at, updated_at FROM movie WHERE title=? ", actorName)
+func (r *MovieRepository) GetByTitle(title string) (*models.Movies, error) {
+	row := r.DB.QueryRow("SELECT id, title, releaseYear, duration, overview, originalLanguage, created_at, updated_at FROM MOVIES WHERE title=? ", title)
 	movie := models.Movies{}
 	err := row.Scan(&movie.Id, &movie.Title, &movie.ReleaseYear, &movie.Duration, &movie.Overview, &movie.OriginalLanguage, &movie.CreatedAt, &movie.UpdatedAt)
 	if err != nil {
@@ -92,11 +98,12 @@ func (c *MovieRepository) GetByTitle(actorName string) (*models.Movies, error) {
 	return &movie, nil
 }
 
-func (c *MovieRepository) SearchByTitle(actorName string) ([]models.Movies, error) {
-	row, rowErr := c.DB.Query("SELECT id, title, releaseYear, duration, overview, originalLanguage, created_at, updated_at FROM movie WHERE title LIKE ?", "%"+actorName+"%")
+func (r *MovieRepository) SearchByTitle(title string) ([]models.Movies, error) {
+	row, rowErr := r.DB.Query("SELECT id, title, releaseYear, duration, overview, originalLanguage, created_at, updated_at FROM MOVIES WHERE title LIKE ?", "%"+title+"%")
 	if rowErr != nil {
 		return nil, rowErr
 	}
+	defer row.Close()
 	movies := []models.Movies{}
 	for row.Next() {
 		movie := models.Movies{}
@@ -112,57 +119,56 @@ func (c *MovieRepository) SearchByTitle(actorName string) ([]models.Movies, erro
 	return movies, nil
 }
 
-func (c *MovieRepository) Post(m models.Movies) error {
-	query := ` INSERT INTO movie (Title, ReleaseYear, Duration, Overview, OriginalLanguage)VALUES (?, ?, ?, ?, ?)`
+func (r *MovieRepository) Post(m models.Movies) (int64, error) {
+	query := ` INSERT INTO MOVIES (Title, ReleaseYear, Duration, Overview, OriginalLanguage)VALUES (?, ?, ?, ?, ?)`
 	mgQuery := `INSERT INTO movie_genre (movieId, genreId) VALUES (?, ?)`
 	maQuery := `INSERT INTO movie_actor (movieId, actorId) VALUES (?, ?)`
-	res, postErr := c.DB.Exec(query, m.Title, m.ReleaseYear, m.Duration, m.Overview, m.OriginalLanguage)
+	res, postErr := r.DB.Exec(query, m.Title, m.ReleaseYear, m.Duration, m.Overview, m.OriginalLanguage)
 	if postErr != nil {
-		return fmt.Errorf("failed to insert movie into table: %w", postErr)
+		return 0, fmt.Errorf("failed to insert MOVIES into table: %w", postErr)
 	}
 	movieID, resErr := res.LastInsertId()
 	if resErr != nil {
-		return fmt.Errorf("failed to retreive last inserted movie id: %w", resErr)
+		return 0, fmt.Errorf("failed to retreive last inserted MOVIES id: %w", resErr)
 	}
 	for _, genreID := range m.GenreId {
-		if _, mgErr := c.DB.Exec(mgQuery, movieID, genreID); mgErr != nil {
-			return fmt.Errorf("failed to link genre %d to movie %q: %w", genreID, m.Title, mgErr)
+		if _, mgErr := r.DB.Exec(mgQuery, movieID, genreID); mgErr != nil {
+			return 0, fmt.Errorf("failed to link genre %d to MOVIES %q: %w", genreID, m.Title, mgErr)
 		}
 	}
+	// var a ActorsRepository
 	for _, actorID := range m.ActorId {
-		if _, maErr := c.DB.Exec(maQuery, movieID, actorID); maErr != nil {
-			return fmt.Errorf("failed to link actor %d to movie %q: %w", actorID, m.Title, maErr)
+
+		if _, maErr := r.DB.Exec(maQuery, movieID, actorID); maErr != nil {
+			return 0, fmt.Errorf("failed to link actor %d to MOVIES %q: %w", actorID, m.Title, maErr)
 		}
 	}
-	return nil
+	return movieID, nil
 }
 
-func (c *MovieRepository) Patch() {
+func (r *MovieRepository) Patch() {
 }
 
-func (c *MovieRepository) Delete(id int, force bool) (int64, error) {
+func (r *MovieRepository) Delete(id int, force bool) (int64, error) {
 	if force {
-		m, payloadErr := c.GetById(id)
+		m, payloadErr := r.GetById(id)
 		if payloadErr != nil {
 			return 0, payloadErr
 		}
-		// err := fmt.Sprintf("Cannot delete Movie %s because it has %d associated actors and %d associated genres.", payload.Title, len(payload.ActorId), len(payload.GenreId))
-		// return 0, errors.New(err)
-
-		mgQuery := `INSERT INTO movie_genre (movieId, genreId) VALUES (?, ?)`
-		maQuery := `INSERT INTO movie_actor (movieId, actorId) VALUES (?, ?)`
+		mgQuery := `DELETE FROM movie_genre WHERE movieId = ? AND genreId = ?`
+		maQuery := `DELETE FROM movie_actor WHERE movieId = ? AND actorId = ?`
 		for _, genreID := range m.GenreId {
-			if _, mgErr := c.DB.Exec(mgQuery, id, genreID); mgErr != nil {
-				return 0, fmt.Errorf("failed to remove the link bw genre %d and movie %q: %w", genreID, m.Title, mgErr)
+			if _, mgErr := r.DB.Exec(mgQuery, id, genreID); mgErr != nil {
+				return 0, fmt.Errorf("failed to remove the link bw genre %d and MOVIES %q: %w", genreID, m.Title, mgErr)
 			}
 		}
 		for _, actorID := range m.ActorId {
-			if _, maErr := c.DB.Exec(maQuery, id, actorID); maErr != nil {
-				return 0, fmt.Errorf("failed to remove the link bw genre %d and movie %q: %w", actorID, m.Title, maErr)
+			if _, maErr := r.DB.Exec(maQuery, id, actorID); maErr != nil {
+				return 0, fmt.Errorf("failed to remove the link bw genre %d and MOVIES %q: %w", actorID, m.Title, maErr)
 			}
 		}
 	}
-	rows, deleteErr := c.DB.Exec("DELETE FROM movie WHERE id=?", id)
+	rows, deleteErr := r.DB.Exec("DELETE FROM MOVIES WHERE id=?", id)
 	if deleteErr != nil {
 		return 0, deleteErr
 	}

@@ -87,7 +87,7 @@ func (h *Handler) PostMovie(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := h.service.CreateMovie(movie)
+	lastInsertedMovie, err := h.service.CreateMovie(movie)
 	if err == sql.ErrNoRows {
 		http.Error(w, err.Error(), http.StatusNoContent)
 		return
@@ -96,7 +96,7 @@ func (h *Handler) PostMovie(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jsonData, err := json.MarshalIndent(movie, "", "  ")
+	jsonData, err := json.MarshalIndent(lastInsertedMovie, "", "  ")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

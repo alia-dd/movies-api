@@ -9,7 +9,7 @@ import (
 )
 
 var scheme = `
-	CREATE TABLE IF NOT EXISTS movie(
+	CREATE TABLE IF NOT EXISTS MOVIES(
 	id 					INTEGER PRIMARY KEY AUTOINCREMENT,
 	title       		TEXT NOT NULL UNIQUE,
 	releaseYear 		INTEGER NOT NULL,
@@ -28,24 +28,26 @@ var scheme = `
 	updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);
 
-	CREATE TABLE IF NOT EXISTS genre(
+	CREATE TABLE IF NOT EXISTS GENRES(
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
-	name TEXT NOT NULL UNIQUE
+	name TEXT NOT NULL UNIQUE,
+	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+	updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);
 
 	CREATE TABLE IF NOT EXISTS movie_genre(
 	genreId      		INTEGER NOT NULL,
 	movieId      		INTEGER NOT NULL,
 	PRIMARY KEY (movieId, genreId),
-    FOREIGN KEY (movieId) REFERENCES movie (id) ,
-	FOREIGN KEY (genreId) REFERENCES genre (id) 
+    FOREIGN KEY (movieId) REFERENCES MOVIES (id) ,
+	FOREIGN KEY (genreId) REFERENCES GENRES (id) 
 	);
 
 	CREATE TABLE IF NOT EXISTS movie_actor(
 	actorId      		INTEGER NOT NULL,
 	movieId      		INTEGER NOT NULL,
 	PRIMARY KEY (movieId, actorId),
-    FOREIGN KEY (movieId) REFERENCES movie (id) ,
+    FOREIGN KEY (movieId) REFERENCES MOVIES (id) ,
 	FOREIGN KEY (actorId) REFERENCES ACTORS (id) 
 	);
 
@@ -62,7 +64,7 @@ func InitializeMovieTable(db *sql.DB) error {
 	fmt.Println("false")
 
 	if _, err := db.Exec(scheme); err != nil {
-		return fmt.Errorf("failed to create movie table: %w", err)
+		return fmt.Errorf("failed to create MOVIES table: %w", err)
 	}
 
 	// if err := seedData(db); err != nil {
@@ -73,7 +75,7 @@ func InitializeMovieTable(db *sql.DB) error {
 }
 func tableExist(db *sql.DB) bool {
 	var count int
-	query := `SELECT count(*) FROM sqlite_master WHERE name ='movie' and type='table'`
+	query := `SELECT count(*) FROM sqlite_master WHERE name ='MOVIES' and type='table'`
 	err := db.QueryRow(query).Scan(&count)
 	if err != nil || count <= 0 {
 		return false
@@ -88,7 +90,7 @@ func tableExist(db *sql.DB) bool {
 
 func seedData(db *sql.DB) error {
 	var movies []models.Movies
-	query := ` INSERT INTO movie (Title, ReleaseYear, Duration, Overview, OriginalLanguage, GenreId ,ActorId)VALUES (?, ?, ?, ?, ?, ?, ?)`
+	query := ` INSERT INTO MOVIES (Title, ReleaseYear, Duration, Overview, OriginalLanguage, GenreId ,ActorId)VALUES (?, ?, ?, ?, ?, ?, ?)`
 	mgQuery := `INSERT INTO movie_genre (movieId, genreId) VALUES (?, ?)`
 	maQuery := `INSERT INTO movie_actor (movieId, actorId) VALUES (?, ?)`
 
@@ -108,20 +110,20 @@ func seedData(db *sql.DB) error {
 			movie.OriginalLanguage,
 		)
 		if err != nil {
-			return fmt.Errorf("failed to insert movie %s: %w", movie.Title, err)
+			return fmt.Errorf("failed to insert MOVIES %s: %w", movie.Title, err)
 		}
 		movieID, resErr := res.LastInsertId()
 		if resErr != nil {
-			return fmt.Errorf("failed to retreive last inserted movie id: %w", resErr)
+			return fmt.Errorf("failed to retreive last inserted MOVIES id: %w", resErr)
 		}
 		for _, genreID := range movie.GenreId {
 			if _, mgErr := db.Exec(mgQuery, movieID, genreID); mgErr != nil {
-				return fmt.Errorf("failed to link genre %d to movie %q: %w", genreID, movie.Title, mgErr)
+				return fmt.Errorf("failed to link genre %d to MOVIES %q: %w", genreID, movie.Title, mgErr)
 			}
 		}
 		for _, actorID := range movie.ActorId {
 			if _, maErr := db.Exec(maQuery, movieID, actorID); maErr != nil {
-				return fmt.Errorf("failed to link actor %d to movie %q: %w", actorID, movie.Title, maErr)
+				return fmt.Errorf("failed to link actor %d to MOVIES %q: %w", actorID, movie.Title, maErr)
 			}
 		}
 

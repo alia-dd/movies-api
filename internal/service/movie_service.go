@@ -62,21 +62,25 @@ func (s *MovieService) GetMovieById(id int) (*models.Movies, error) {
 	payload, err := s.repo.GetById(id)
 	return payload, err
 }
-func (s *MovieService) GetMovieByTitle(actorName string) (*models.Movies, error) {
-	payload, err := s.repo.GetByTitle(actorName)
+func (s *MovieService) GetMovieByTitle(title string) (*models.Movies, error) {
+	payload, err := s.repo.GetByTitle(title)
 	return payload, err
 }
-func (s *MovieService) SearchMovieByTitle(actorName string) ([]models.Movies, error) {
-	payload, err := s.repo.SearchByTitle(actorName)
+func (s *MovieService) SearchMovieByTitle(title string) ([]models.Movies, error) {
+	payload, err := s.repo.SearchByTitle(title)
 	return payload, err
 }
 
-func (s *MovieService) CreateMovie(movie models.Movies) error {
+func (s *MovieService) CreateMovie(movie models.Movies) (*models.Movies, error) {
 	if movie.Title == "" || movie.ReleaseYear < 1888 || movie.ReleaseYear > time.Now().Year() {
-		return fmt.Errorf("Invalid input")
+		return nil, fmt.Errorf("Invalid input")
 	}
-	err := s.repo.Post(movie)
-	return err
+	movieId, err := s.repo.Post(movie)
+	var lastInsetedMovie *models.Movies
+	if err == nil {
+		lastInsetedMovie, _ = s.repo.GetById(int(movieId))
+	}
+	return lastInsetedMovie, err
 }
 func (s *MovieService) DeleteMovie(id string, force string) error {
 	forcebool, forceErr := strconv.ParseBool(force)

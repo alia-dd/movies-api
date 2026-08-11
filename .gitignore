@@ -1,3 +1,4 @@
 *.db-wal
 *.db-shm
-movies.db
+*.db
+.env
