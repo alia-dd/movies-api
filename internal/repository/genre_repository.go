@@ -81,6 +81,27 @@ func (r *GenreRepository) GetGenreByID(id int) (*models.Genre,error) {
 	return &genre,nil
 }
 
+func (r *GenreRepository) GetGenreByName(search string)([]models.Genre,error) {
+	query := `SELECT * FROM genres WHERE name LIKE ?` //LIKE case insenstive GLOB is case sensitive
+	rows, err := r.db.Query(query,"%"+search+"%")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var genres []models.Genre
+	for rows.Next() {
+		var genre models.Genre
+		err := rows.Scan(&genre.Id, &genre.Name, &genre.CreatedAt, &genre.UpdatedAt)
+		if err !=nil {
+			return nil,err
+		}
+		genres =append(genres,genre)
+	}
+	return genres,rows.Err()
+}
+
+
 func (r *GenreRepository) UpdateGenre(id int, name string) error {
 	query := `UPDATE genres SET name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
 	result,err := r.db.Exec(query,name,id)
