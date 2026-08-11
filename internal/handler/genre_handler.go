@@ -72,7 +72,7 @@ func (h *GenreHandler) GetAllGenres(w http.ResponseWriter, r *http.Request) {
 			"page":        page,
 			"limit":       limit,
 			"total":       total,
-			"total_pages": total /limit,
+			"total_pages": (total + limit -1) / limit,
 		},
 	})
 }
