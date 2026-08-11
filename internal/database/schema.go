@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"movies-api/internal/models"
+	"movies-api/internal/repository"
 	"os"
 )
 
 var scheme = `
 	CREATE TABLE IF NOT EXISTS MOVIES(
 	id 					INTEGER PRIMARY KEY AUTOINCREMENT,
-	title       		TEXT NOT NULL UNIQUE,
+	title       		TEXT NOT NULL,
 	releaseYear 		INTEGER NOT NULL,
 	duration    		INTEGER,
 	Overview 			TEXT,
@@ -22,7 +23,7 @@ var scheme = `
 
 	CREATE TABLE IF NOT EXISTS ACTORS(
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
-	name TEXT NOT NULL UNIQUE,
+	name TEXT NOT NULL,
 	birthdate TEXT NOT NULL,
 	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 	updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -61,15 +62,13 @@ func InitializeMovieTable(db *sql.DB) error {
 	if tableExist(db) {
 		return nil
 	}
-	fmt.Println("false")
-
 	if _, err := db.Exec(scheme); err != nil {
 		return fmt.Errorf("failed to create MOVIES table: %w", err)
 	}
 
-	// if err := seedData(db); err != nil {
-	// 	return fmt.Errorf("failed to seed movie data: %w", err)
-	// }
+	if err := seedData(db); err != nil {
+		return fmt.Errorf("failed to seed movie data: %w", err)
+	}
 
 	return nil
 }
@@ -83,51 +82,54 @@ func tableExist(db *sql.DB) bool {
 	return true
 }
 
-// func NewTable(db *sql.DB) error {
-// 	_, err := db.Exec(scheme)
-// 	return err
-// }
-
 func seedData(db *sql.DB) error {
-	var movies []models.Movies
-	query := ` INSERT INTO MOVIES (Title, ReleaseYear, Duration, Overview, OriginalLanguage, GenreId ,ActorId)VALUES (?, ?, ?, ?, ?, ?, ?)`
-	mgQuery := `INSERT INTO movie_genre (movieId, genreId) VALUES (?, ?)`
-	maQuery := `INSERT INTO movie_actor (movieId, actorId) VALUES (?, ?)`
 
-	body, fileErr := os.ReadFile("data/tmdb_movies.json")
+	var actors []*models.Actor
+	var genres []*models.Genre
+	var movies []models.Movies
+	mr := repository.NewMovieRepository(db)
+	ar := repository.NewActorRepository(db)
+	gr := repository.NewGenreRepository(db)
+
+	actorBody, fileErr := os.ReadFile("internal/database/data/tmdb_actors.json")
 	if fileErr != nil {
 		return fileErr
 	}
-	if err := json.Unmarshal(body, &movies); err != nil {
+	if err := json.Unmarshal(actorBody, &actors); err != nil {
 		return fmt.Errorf("failed to unmarshal actor seed data: %w", err)
 	}
-	for _, movie := range movies {
-		res, err := db.Exec(query,
-			movie.Title,
-			movie.ReleaseYear,
-			movie.Duration,
-			movie.Overview,
-			movie.OriginalLanguage,
-		)
-		if err != nil {
-			return fmt.Errorf("failed to insert MOVIES %s: %w", movie.Title, err)
-		}
-		movieID, resErr := res.LastInsertId()
-		if resErr != nil {
-			return fmt.Errorf("failed to retreive last inserted MOVIES id: %w", resErr)
-		}
-		for _, genreID := range movie.GenreId {
-			if _, mgErr := db.Exec(mgQuery, movieID, genreID); mgErr != nil {
-				return fmt.Errorf("failed to link genre %d to MOVIES %q: %w", genreID, movie.Title, mgErr)
-			}
-		}
-		for _, actorID := range movie.ActorId {
-			if _, maErr := db.Exec(maQuery, movieID, actorID); maErr != nil {
-				return fmt.Errorf("failed to link actor %d to MOVIES %q: %w", actorID, movie.Title, maErr)
-			}
-		}
 
+	for _, actor := range actors {
+		if err := ar.CreateActor(actor); err != nil {
+			return fmt.Errorf("failed to seed movie %q: %w", actor.Name, err)
+		}
 	}
 
+	genreBody, fileErr := os.ReadFile("internal/database/data/tmdb_genres.json")
+	if fileErr != nil {
+		return fileErr
+	}
+	if err := json.Unmarshal(genreBody, &genres); err != nil {
+		return fmt.Errorf("failed to unmarshal genre seed data: %w", err)
+	}
+
+	for _, genre := range genres {
+		if err := gr.CreateGenre(genre); err != nil {
+			return fmt.Errorf("failed to seed genre %q: %w", genre.Name, err)
+		}
+	}
+
+	movieBody, fileErr := os.ReadFile("internal/database/data/tmdb_movies.json")
+	if fileErr != nil {
+		return fileErr
+	}
+	if err := json.Unmarshal(movieBody, &movies); err != nil {
+		return fmt.Errorf("failed to unmarshal movie seed data: %w", err)
+	}
+	for _, movie := range movies {
+		if _, err := mr.Post(movie); err != nil {
+			return fmt.Errorf("failed to seed movie %q: %w", movie.Title, err)
+		}
+	}
 	return nil
 }

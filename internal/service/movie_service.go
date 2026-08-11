@@ -72,7 +72,8 @@ func (s *MovieService) SearchMovieByTitle(title string) ([]models.Movies, error)
 }
 
 func (s *MovieService) CreateMovie(movie models.Movies) (*models.Movies, error) {
-	if movie.Title == "" || movie.ReleaseYear < 1888 || movie.ReleaseYear > time.Now().Year() {
+	year, err := strconv.Atoi(movie.ReleaseYear)
+	if err != nil || movie.Title == "" || year < 1888 || year > time.Now().Year() {
 		return nil, fmt.Errorf("Invalid input")
 	}
 	movieId, err := s.repo.Post(movie)

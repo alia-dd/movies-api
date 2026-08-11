@@ -15,7 +15,7 @@ type Filter struct {
 type Movies struct {
 	Id          int    `json:"id"`
 	Title       string `json:"title"`
-	ReleaseYear int    `json:"release_date"`
+	ReleaseYear string `json:"release_date"`
 
 	Duration         uint16 `json:"duration"`
 	Overview         string `json:"overview"`

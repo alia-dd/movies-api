@@ -5,8 +5,12 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
+	"sort"
+	"strings"
+	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -15,6 +19,7 @@ type TMDBMovie struct {
 	ID               int    `json:"id"`
 	Title            string `json:"title"`
 	ReleaseDate      string `json:"release_date"`
+	Duration         uint16 `json:"duration"`
 	Overview         string `json:"overview"`
 	OriginalLanguage string `json:"original_language"`
 	GenreIDs         []int  `json:"genre_ids"`
@@ -60,8 +65,8 @@ func FetchSeedData() {
 	var allGenres = make(map[int]TMDGenre)
 	var allActors = make(map[int]TMDBActor)
 	var foundGenres = make(map[int]string)
-	nextGenreID := 0
-	nextActorID := 0
+	nextGenreID := 1
+	nextActorID := 1
 
 	//  --url 'https://api.themoviedb.org/3/genre/movie/list?language=en' \
 	urlG := fmt.Sprintf("https://api.themoviedb.org/3/genre/movie/list?api_key=%s", apiKey)
@@ -76,7 +81,7 @@ func FetchSeedData() {
 		foundGenres[genre.ID] = genre.Name
 	}
 
-	for page := 1; page <= 50; page++ {
+	for page := 1; page <= 10; page++ {
 		//  --url 'https://api.themoviedb.org/3/movie/popular?language=en-US&page=1' \
 
 		url := fmt.Sprintf("https://api.themoviedb.org/3/movie/popular?api_key=%s&page=%d", apiKey, page)
@@ -87,6 +92,7 @@ func FetchSeedData() {
 			return
 		}
 		for _, movie := range tmdbMovieResp.Results {
+			seenActors := make(map[int]bool)
 			movieGenres := []int{}
 			movieActors := []int{}
 
@@ -112,8 +118,8 @@ func FetchSeedData() {
 					if person == (Person{}) {
 						continue
 					}
-					if person.KnownFor != "acting" {
-						break
+					if person.KnownFor != "Acting" {
+						continue
 					}
 					actorData = TMDBActor{
 						ID:           nextActorID,
@@ -125,13 +131,19 @@ func FetchSeedData() {
 					allActors[actor.ID] = actorData
 					nextActorID++
 				}
+				if seenActors[actorData.ID] {
+					continue
+				}
+				seenActors[actorData.ID] = true
 				movieActors = append(movieActors, actorData.ID)
 			}
+			yearString := strings.Split(movie.ReleaseDate, "-")
 
 			allMovies = append(allMovies, TMDBMovie{
 				ID:               movie.ID,
 				Title:            movie.Title,
-				ReleaseDate:      movie.ReleaseDate,
+				ReleaseDate:      yearString[0],
+				Duration:         uint16(rand.Uint32()),
 				Overview:         movie.Overview,
 				OriginalLanguage: movie.OriginalLanguage,
 				GenreIDs:         movieGenres,
@@ -153,6 +165,9 @@ func FetchSeedData() {
 	for _, g := range allGenres {
 		genreList = append(genreList, g)
 	}
+	sort.Slice(genreList, func(i, j int) bool {
+		return genreList[i].ID < genreList[j].ID
+	})
 	genreOut, err := json.MarshalIndent(genreList, "", "  ")
 	if err != nil {
 		log.Printf("Failed to marshal to genreList")
@@ -162,6 +177,9 @@ func FetchSeedData() {
 	for _, a := range allActors {
 		actorList = append(actorList, a)
 	}
+	sort.Slice(actorList, func(i, j int) bool {
+		return actorList[i].ID < actorList[j].ID
+	})
 	actorOut, err := json.MarshalIndent(actorList, "", " ")
 	if err != nil {
 		log.Printf("Failed to marshal to actorList")
@@ -187,19 +205,35 @@ func Load() {
 	}
 }
 func ResponsData(url string) []byte {
-	resp, err := http.Get(url)
-	if err != nil {
-		log.Printf("Failed to fetch from TMDB api: %v", url)
-		return []byte{}
-	}
+	var lastErr error
+	for i := 0; i < 4; i++ {
+		if i > 0 {
+			time.Sleep(time.Duration(1) * 500 * time.Millisecond)
+		}
+		resp, err := http.Get(url)
+		if err != nil {
+			lastErr = err
+			continue
+		}
 
-	body, _ := io.ReadAll(resp.Body)
-	resp.Body.Close()
-	return body
+		body, bodyErr := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if bodyErr != nil {
+			lastErr = bodyErr
+			continue
+		}
+		if resp.StatusCode != http.StatusOK {
+			lastErr = fmt.Errorf("status %d for %s", resp.StatusCode, url)
+			continue
+		}
+		return body
+	}
+	log.Printf("Failed to fetch from TMDB api %s after retries: %v", url, lastErr)
+	return []byte{}
 }
 
 func fetchAllMovieActors(movieID int, apiKey string) TMDBActorResponse {
-	// https: //api.themoviedb.org/3/movie/27205/credits?api_key=add63e21c755467e1763245167c231b4
+	// https: //api.themoviedb.org/3/movie/27205/credits?api_key=?
 	url := fmt.Sprintf("https://api.themoviedb.org/3/movie/%d/credits?api_key=%s", movieID, apiKey)
 	bodyG := ResponsData(url)
 	var TMDBActorResp TMDBActorResponse
@@ -211,7 +245,7 @@ func fetchAllMovieActors(movieID int, apiKey string) TMDBActorResponse {
 }
 
 func fetchActorData(actorID int, apiKey string) Person {
-	// https://api.themoviedb.org/3/person/6193?api_key=add63e21c755467e1763245167c231b4
+	// https://api.themoviedb.org/3/person/6193?api_key=?
 	url := fmt.Sprintf("https://api.themoviedb.org/3/person/%d?api_key=%s", actorID, apiKey)
 	bodyG := ResponsData(url)
 	var person Person

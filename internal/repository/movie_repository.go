@@ -17,7 +17,7 @@ func NewMovieRepository(db *sql.DB) *MovieRepository {
 	return &MovieRepository{DB: db}
 }
 func (r *MovieRepository) Get(f models.Filter) ([]models.Movies, error) {
-	query := `SELECT m.id, m.title, m.releaseYear, m.duration, m.overview, m.originalLanguage, m.created_at, m.updated_at FROM MOVIES m`
+	query := `SELECT m.id, m.title, m.releaseYear, m.duration, m.overview, m.originalLanguage, m.GenreId, m.ActorId, m.created_at, m.updated_at FROM MOVIES m`
 	extraQuery := []string{}
 	arg := []any{}
 
@@ -41,19 +41,16 @@ func (r *MovieRepository) Get(f models.Filter) ([]models.Movies, error) {
 
 	size, page := -1, 1
 	if f.Size != "" {
-		if s, err := strconv.Atoi(f.Size); err != nil {
+		if s, err := strconv.Atoi(f.Size); err == nil {
 			size = s
 		}
 	}
 	if f.Page != "" {
 		page, _ = strconv.Atoi(f.Page)
-		if p, err := strconv.Atoi(f.Page); err != nil {
-			page = p
-		}
 	}
 	if size > -1 {
 		query += ` Limit ?  OFFSET ? `
-		arg = append(arg, size, page-1*size)
+		arg = append(arg, size, (page-1)*size)
 
 	}
 
@@ -63,13 +60,25 @@ func (r *MovieRepository) Get(f models.Filter) ([]models.Movies, error) {
 	}
 	defer rows.Close()
 	movies := []models.Movies{}
-
+	movieRepo := NewActorRepository(r.DB)
+	genreeRepo := NewGenreRepository(r.DB)
 	for rows.Next() {
 		movie := models.Movies{}
-		err := rows.Scan(&movie.Id, &movie.Title, &movie.ReleaseYear, &movie.Duration, &movie.Overview, &movie.OriginalLanguage, &movie.CreatedAt, &movie.UpdatedAt)
+		err := rows.Scan(&movie.Id, &movie.Title, &movie.ReleaseYear, &movie.Duration, &movie.Overview, &movie.OriginalLanguage, &movie.GenreId, &movie.ActorId, &movie.CreatedAt, &movie.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
+		movieGenres := []string{}
+		movieActors := []string{}
+		for _, actorid := range movie.ActorId {
+			payload, _ := movieRepo.FindById(actorid)
+			movieActors = append(movieActors, payload.Name)
+		}
+		for _, genreid := range movie.GenreId {
+			payload, _ := genreeRepo.GetGenreByID(genreid)
+			movieGenres = append(movieGenres, payload.Name)
+		}
+		/// moviega waa int id hadi arabo id lee udiipi karaa string masiing kari :(
 		movies = append(movies, movie)
 	}
 	if err := rows.Err(); err != nil {
