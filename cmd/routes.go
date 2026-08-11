@@ -34,7 +34,7 @@ func route() (http.Handler, error) {
 	actorService := service.NewActorService(repo)
 	actorHandler := handler.NewActorHandler(actorService)
 
-	movieRepo := repository.NewdbConnection(db)
+	movieRepo := repository.NewMovieRepository(db)
 	movieService := service.NewMovieService(movieRepo)
 	movieHandler := handler.NewHandler(movieService)
 

@@ -8,15 +8,15 @@ import (
 	"strings"
 )
 
-type DatabaseConnection struct {
+type MovieRepository struct {
 	DB *sql.DB
 }
 
 // meshan waxaa galaayo sql strings data
-func NewdbConnection(db *sql.DB) *DatabaseConnection {
-	return &DatabaseConnection{DB: db}
+func NewMovieRepository(db *sql.DB) *MovieRepository {
+	return &MovieRepository{DB: db}
 }
-func (c *DatabaseConnection) Get(f models.Filter) ([]models.Movies, error) {
+func (c *MovieRepository) Get(f models.Filter) ([]models.Movies, error) {
 	query := `SELECT m.id, m.title, m.releaseYear, m.duration, m.overview, m.originalLanguage, m.created_at, m.updated_at FROM movie m`
 	extraQuery := []string{}
 	arg := []any{}
@@ -73,7 +73,7 @@ func (c *DatabaseConnection) Get(f models.Filter) ([]models.Movies, error) {
 	return movies, nil
 }
 
-func (c *DatabaseConnection) GetById(id int) (*models.Movies, error) {
+func (c *MovieRepository) GetById(id int) (*models.Movies, error) {
 	row := c.DB.QueryRow("SELECT id, title, releaseYear, duration, overview, originalLanguage, created_at, updated_at FROM movie WHERE id=? ", id)
 	movie := models.Movies{}
 	err := row.Scan(&movie.Id, &movie.Title, &movie.ReleaseYear, &movie.Duration, &movie.Overview, &movie.OriginalLanguage, &movie.CreatedAt, &movie.UpdatedAt)
@@ -82,7 +82,7 @@ func (c *DatabaseConnection) GetById(id int) (*models.Movies, error) {
 	}
 	return &movie, nil
 }
-func (c *DatabaseConnection) GetByTitle(actorName string) (*models.Movies, error) {
+func (c *MovieRepository) GetByTitle(actorName string) (*models.Movies, error) {
 	row := c.DB.QueryRow("SELECT id, title, releaseYear, duration, overview, originalLanguage, created_at, updated_at FROM movie WHERE title=? ", actorName)
 	movie := models.Movies{}
 	err := row.Scan(&movie.Id, &movie.Title, &movie.ReleaseYear, &movie.Duration, &movie.Overview, &movie.OriginalLanguage, &movie.CreatedAt, &movie.UpdatedAt)
@@ -92,7 +92,7 @@ func (c *DatabaseConnection) GetByTitle(actorName string) (*models.Movies, error
 	return &movie, nil
 }
 
-func (c *DatabaseConnection) SearchByTitle(actorName string) ([]models.Movies, error) {
+func (c *MovieRepository) SearchByTitle(actorName string) ([]models.Movies, error) {
 	row, rowErr := c.DB.Query("SELECT id, title, releaseYear, duration, overview, originalLanguage, created_at, updated_at FROM movie WHERE title LIKE ?", "%"+actorName+"%")
 	if rowErr != nil {
 		return nil, rowErr
@@ -112,7 +112,7 @@ func (c *DatabaseConnection) SearchByTitle(actorName string) ([]models.Movies, e
 	return movies, nil
 }
 
-func (c *DatabaseConnection) Post(m models.Movies) error {
+func (c *MovieRepository) Post(m models.Movies) error {
 	query := ` INSERT INTO movie (Title, ReleaseYear, Duration, Overview, OriginalLanguage)VALUES (?, ?, ?, ?, ?)`
 	mgQuery := `INSERT INTO movie_genre (movieId, genreId) VALUES (?, ?)`
 	maQuery := `INSERT INTO movie_actor (movieId, actorId) VALUES (?, ?)`
@@ -137,10 +137,10 @@ func (c *DatabaseConnection) Post(m models.Movies) error {
 	return nil
 }
 
-func (c *DatabaseConnection) Patch() {
+func (c *MovieRepository) Patch() {
 }
 
-func (c *DatabaseConnection) Delete(id int, force bool) (int64, error) {
+func (c *MovieRepository) Delete(id int, force bool) (int64, error) {
 	if force {
 		m, payloadErr := c.GetById(id)
 		if payloadErr != nil {

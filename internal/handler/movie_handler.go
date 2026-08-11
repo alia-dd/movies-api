@@ -14,7 +14,7 @@ type Handler struct {
 	service *service.MovieService
 }
 
-func NewHandler(service *service.MovieService) *Handler {
+func NewMovieHandler(service *service.MovieService) *Handler {
 	return &Handler{service: service}
 }
 

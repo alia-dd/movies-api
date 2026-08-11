@@ -10,11 +10,11 @@ import (
 )
 
 type MovieService struct {
-	repo *repository.DatabaseConnection
+	repo *repository.MovieRepository
 }
 
 // meshan waxaa uguwaxdaa repoga haa waxan dhan waakabodi karate
-func NewMovieService(repo *repository.DatabaseConnection) *MovieService {
+func NewMovieService(repo *repository.MovieRepository) *MovieService {
 	return &MovieService{repo: repo}
 }
 
