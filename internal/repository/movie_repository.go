@@ -2,7 +2,6 @@ package repository
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"movies-api/internal/models"
 	"strconv"
@@ -75,32 +74,51 @@ func (c *DatabaseConnection) Get(f models.Filter) ([]models.Movies, error) {
 }
 
 func (c *DatabaseConnection) GetById(id int) (*models.Movies, error) {
-	row := c.DB.QueryRow("SELECT FROM movie WHERE id=? ", id)
+	row := c.DB.QueryRow("SELECT id, title, releaseYear, duration, overview, originalLanguage, created_at, updated_at FROM movie WHERE id=? ", id)
 	movie := models.Movies{}
-	err := row.Scan(&movie.Id, &movie.Title, &movie.ReleaseYear, &movie.Duration, &movie.CreatedAt, &movie.UpdatedAt)
+	err := row.Scan(&movie.Id, &movie.Title, &movie.ReleaseYear, &movie.Duration, &movie.Overview, &movie.OriginalLanguage, &movie.CreatedAt, &movie.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return &movie, nil
+}
+func (c *DatabaseConnection) GetByTitle(actorName string) (*models.Movies, error) {
+	row := c.DB.QueryRow("SELECT id, title, releaseYear, duration, overview, originalLanguage, created_at, updated_at FROM movie WHERE title=? ", actorName)
+	movie := models.Movies{}
+	err := row.Scan(&movie.Id, &movie.Title, &movie.ReleaseYear, &movie.Duration, &movie.Overview, &movie.OriginalLanguage, &movie.CreatedAt, &movie.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
 	return &movie, nil
 }
 
-func (c *DatabaseConnection) GetByTitle(actorName string) (*models.Movies, error) {
-	row := c.DB.QueryRow("SELECT FROM movie WHERE title=? ", actorName)
-	movie := models.Movies{}
-	err := row.Scan(&movie.Id, &movie.Title, &movie.ReleaseYear, &movie.Duration, &movie.CreatedAt, &movie.UpdatedAt)
-	if err != nil {
+func (c *DatabaseConnection) SearchByTitle(actorName string) ([]models.Movies, error) {
+	row, rowErr := c.DB.Query("SELECT id, title, releaseYear, duration, overview, originalLanguage, created_at, updated_at FROM movie WHERE title LIKE ?", "%"+actorName+"%")
+	if rowErr != nil {
+		return nil, rowErr
+	}
+	movies := []models.Movies{}
+	for row.Next() {
+		movie := models.Movies{}
+		err := row.Scan(&movie.Id, &movie.Title, &movie.ReleaseYear, &movie.Duration, &movie.Overview, &movie.OriginalLanguage, &movie.CreatedAt, &movie.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+		movies = append(movies, movie)
+	}
+	if err := row.Err(); err != nil {
 		return nil, err
 	}
-	return &movie, nil
+	return movies, nil
 }
 
 func (c *DatabaseConnection) Post(m models.Movies) error {
-	query := ` INSERT INTO movie (Title, ReleaseYear, Duration, Overview, OriginalLanguage, GenreId ,ActorId)VALUES (?, ?, ?, ?, ?, ?, ?)`
+	query := ` INSERT INTO movie (Title, ReleaseYear, Duration, Overview, OriginalLanguage)VALUES (?, ?, ?, ?, ?)`
 	mgQuery := `INSERT INTO movie_genre (movieId, genreId) VALUES (?, ?)`
 	maQuery := `INSERT INTO movie_actor (movieId, actorId) VALUES (?, ?)`
-	res, postErr := c.DB.Exec(query, m.Title, m.ReleaseYear, m.Duration, m.Overview, m.OriginalLanguage, m.GenreId, m.ActorId)
+	res, postErr := c.DB.Exec(query, m.Title, m.ReleaseYear, m.Duration, m.Overview, m.OriginalLanguage)
 	if postErr != nil {
-
+		return fmt.Errorf("failed to insert movie into table: %w", postErr)
 	}
 	movieID, resErr := res.LastInsertId()
 	if resErr != nil {
@@ -123,13 +141,26 @@ func (c *DatabaseConnection) Patch() {
 }
 
 func (c *DatabaseConnection) Delete(id int, force bool) (int64, error) {
-	if !force {
-		payload, payloadErr := c.GetById(id)
+	if force {
+		m, payloadErr := c.GetById(id)
 		if payloadErr != nil {
 			return 0, payloadErr
 		}
-		err := fmt.Sprintf("Cannot delete Movie %s because it has %d associated actors and %d associated genres.", payload.Title, len(payload.ActorId), len(payload.GenreId))
-		return 0, errors.New(err)
+		// err := fmt.Sprintf("Cannot delete Movie %s because it has %d associated actors and %d associated genres.", payload.Title, len(payload.ActorId), len(payload.GenreId))
+		// return 0, errors.New(err)
+
+		mgQuery := `INSERT INTO movie_genre (movieId, genreId) VALUES (?, ?)`
+		maQuery := `INSERT INTO movie_actor (movieId, actorId) VALUES (?, ?)`
+		for _, genreID := range m.GenreId {
+			if _, mgErr := c.DB.Exec(mgQuery, id, genreID); mgErr != nil {
+				return 0, fmt.Errorf("failed to remove the link bw genre %d and movie %q: %w", genreID, m.Title, mgErr)
+			}
+		}
+		for _, actorID := range m.ActorId {
+			if _, maErr := c.DB.Exec(maQuery, id, actorID); maErr != nil {
+				return 0, fmt.Errorf("failed to remove the link bw genre %d and movie %q: %w", actorID, m.Title, maErr)
+			}
+		}
 	}
 	rows, deleteErr := c.DB.Exec("DELETE FROM movie WHERE id=?", id)
 	if deleteErr != nil {

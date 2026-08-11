@@ -66,20 +66,22 @@ func (s *MovieService) GetMovieByTitle(actorName string) (*models.Movies, error)
 	payload, err := s.repo.GetByTitle(actorName)
 	return payload, err
 }
+func (s *MovieService) SearchMovieByTitle(actorName string) ([]models.Movies, error) {
+	payload, err := s.repo.SearchByTitle(actorName)
+	return payload, err
+}
 
 func (s *MovieService) CreateMovie(movie models.Movies) error {
 	if movie.Title == "" || movie.ReleaseYear < 1888 || movie.ReleaseYear > time.Now().Year() {
 		return fmt.Errorf("Invalid input")
 	}
-	fmt.Println("herre  CreateMovie")
 	err := s.repo.Post(movie)
 	return err
 }
 func (s *MovieService) DeleteMovie(id string, force string) error {
 	forcebool, forceErr := strconv.ParseBool(force)
 	if forceErr != nil {
-		log.Printf("force must be a boolean")
-		return forceErr
+		return fmt.Errorf("force must be a boolean %w", forceErr)
 	}
 	var sentencedMovie *models.Movies
 	var sentencederr error
@@ -102,8 +104,7 @@ func (s *MovieService) DeleteMovie(id string, force string) error {
 	}
 	affectedR, err := s.repo.Delete(mId, forcebool)
 	if err != nil {
-		log.Printf("Failed to delete movie with id = %d \n Error: %v", id, err)
-		return err
+		return fmt.Errorf("Failed to delete movie with id = %v \n Error: %v", id, err)
 	}
 	log.Printf("Successfully deleted Number of Row Affected %d", affectedR)
 

@@ -30,7 +30,7 @@ var scheme = `
 
 	CREATE TABLE IF NOT EXISTS genre(
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
-	name TEXT NOT NULL UNIQUE,
+	name TEXT NOT NULL UNIQUE
 	);
 
 	CREATE TABLE IF NOT EXISTS movie_genre(
@@ -40,6 +40,7 @@ var scheme = `
     FOREIGN KEY (movieId) REFERENCES movie (id) ,
 	FOREIGN KEY (genreId) REFERENCES genre (id) 
 	);
+
 	CREATE TABLE IF NOT EXISTS movie_actor(
 	actorId      		INTEGER NOT NULL,
 	movieId      		INTEGER NOT NULL,
@@ -64,9 +65,9 @@ func InitializeMovieTable(db *sql.DB) error {
 		return fmt.Errorf("failed to create movie table: %w", err)
 	}
 
-	if err := seedData(db); err != nil {
-		return fmt.Errorf("failed to seed movie data: %w", err)
-	}
+	// if err := seedData(db); err != nil {
+	// 	return fmt.Errorf("failed to seed movie data: %w", err)
+	// }
 
 	return nil
 }
