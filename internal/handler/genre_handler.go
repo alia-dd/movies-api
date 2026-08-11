@@ -8,13 +8,6 @@ import (
 	"strconv"
 )
 
-/*
-POST - createGenre
-GET - getAllGenres
-GET - getGenresByID
-PUT - updateGenre
-Delete -deleteGenreByName/ByID
-*/
 type GenreHandler struct {
 	genreService *service.GenreService
 }
@@ -27,12 +20,7 @@ func NewGenreHandler(genreService *service.GenreService) *GenreHandler {
 
 func (h *GenreHandler) CreateGenre(w http.ResponseWriter, r *http.Request) {
 	var genre models.Genre
-	/*
-	   r.Body-- is raw json from request
-	   NewDecoder parses json
-	   Decode(&genre) converts Json into go struct and populates genre
 
-	*/
 	err := json.NewDecoder(r.Body).Decode(&genre)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -49,7 +37,28 @@ func (h *GenreHandler) CreateGenre(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *GenreHandler) GetAllGenres(w http.ResponseWriter, r *http.Request) {
-	genres, err := h.genreService.GetAllGenres()
+	pageStr := r.URL.Query().Get("page")
+	limitStr := r.URL.Query().Get("limit")
+
+	if pageStr == "" {
+		pageStr = "1"
+	}
+	if limitStr == "" {
+		limitStr = "10"
+	}
+
+	page, err := strconv.Atoi(pageStr)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	genres, total, err := h.genreService.GetAllGenres(page, limit)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -57,7 +66,15 @@ func (h *GenreHandler) GetAllGenres(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(genres)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"data": genres,
+		"pagination": map[string]int{
+			"page":        page,
+			"limit":       limit,
+			"total":       total,
+			"total_pages": total /limit,
+		},
+	})
 }
 
 func (h *GenreHandler) GetGenreByID(w http.ResponseWriter, r *http.Request) {

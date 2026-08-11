@@ -36,36 +36,32 @@ func (r *GenreRepository) CreateGenre(genre *models.Genre) error {
 	err = r.db.QueryRow(`SELECT created_at, updated_at FROM genres WHERE id = ?`, id).
 		Scan(&genre.CreatedAt, &genre.UpdatedAt)
 	return err
-
-	/*
-		line 42 : why
-		if not used the fetched data in stdout create and update times show default time
-		{"id":3,"name":"Drama","createdAt":"0001-01-01T00:00:00Z","updatedAt":"0001-01-01T00:00:00Z"}
-		to update our data
-		we fetch the row from db by id
-		using Scan() we assign the data into corresponding place
-		order of variables important
-	*/
 }
 
-func (r *GenreRepository) GetAllGenres() ([]models.Genre, error) {
-	query := `SELECT * FROM genres`
-	rows, err := r.db.Query(query)
+func (r *GenreRepository) GetAllGenres(page,limit int) ([]models.Genre,int, error) {
+	offset := (page-1) * limit
+	query := `SELECT * FROM genres LIMIT ? OFFSET ?`
+	
+	var total int
+	countQuery := `SELECT COUNT (*) FROM genres`
+	r.db.QueryRow(countQuery).Scan(&total)
+
+	rows, err := r.db.Query(query,limit,offset)
 	if err != nil {
-		return nil, err
+		return nil, total, err
 	}
 	defer rows.Close()
-
+	
 	var genres []models.Genre
 	for rows.Next() {
 		var genre models.Genre
 		err := rows.Scan(&genre.Id, &genre.Name, &genre.CreatedAt, &genre.UpdatedAt)
 		if err !=nil {
-			return nil,err
+			return nil,total,err
 		}
 		genres =append(genres,genre)
 	}
-	return genres,rows.Err()
+	return genres,total,rows.Err()
 }
 
 func (r *GenreRepository) GetGenreByID(id int) (*models.Genre,error) {
