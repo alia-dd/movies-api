@@ -58,6 +58,11 @@ func (h *GenreHandler) GetAllGenres(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if page <= 0 || limit <= 0 {
+        http.Error(w, "page and limit must be greater than 0", http.StatusBadRequest)
+        return
+    }
+
 	genres, total, err := h.genreService.GetAllGenres(page, limit)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
