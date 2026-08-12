@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"movies-api/internal/models"
 	"strings"
 	"time"
@@ -136,7 +137,36 @@ func (r *ActorsRepository) GetAllActors() ([]models.Actor, error) {
 	return actors, err
 }
 
-func (r *ActorsRepository) DeleteActorsById(id int) error {
+func (r *ActorsRepository) DeleteActorsById(id int, force bool) error {
+	// checking if the actor exists
+	var name string
+	err := r.db.QueryRow(
+		"SELECT name FROM actors WHERE id = ?", id,
+	).Scan(&name)
+	if err != nil {
+		return ErrNotFound
+	}
+	// checking if the actor is related to any movies
+	var count int
+	err = r.db.QueryRow(
+		"SELECT COUNT(*) FROM movie_actors WHERE actor_id = ?", id,
+	).Scan(&count)
+
+	if err != nil {
+		return err
+	}
+	// if force deletion isn't requested and actor has relation to movies
+	if count > 0 && !force {
+		return fmt.Errorf("can't actor %s, because it has %d related movie", name, count)
+	}
+	// removing the relation first
+	if force {
+		_, err := r.db.Exec(`DELETE FROM movie_actors WHERE actor_id = ?, id`)
+		if err != nil {
+			return err
+		}
+	}
+	// delete the actor
 	query := `
 	DELETE FROM actors WHERE id = ?`
 
@@ -153,7 +183,6 @@ func (r *ActorsRepository) DeleteActorsById(id int) error {
 	}
 	return nil
 }
-
 func (r *ActorsRepository) DeleteActorsByName(name string) error {
 	query := `
 	DELETE FROM actors WHERE name = ?`

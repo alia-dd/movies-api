@@ -40,6 +40,9 @@ func (s *ActorService) UpdateActor(actor *models.Actor) error {
 }
 
 func (s *ActorService) FindById(id int) (*models.Actor, error) {
+	if id <= 0 {
+		return nil, repository.ErrInvalidInput
+	}
 	return s.repo.FindById(id)
 }
 func (s *ActorService) FindByName(name string) (*models.Actor, error) {
@@ -52,8 +55,8 @@ func (s *ActorService) FindByName(name string) (*models.Actor, error) {
 func (s *ActorService) GetAllActors() ([]models.Actor, error) {
 	return s.repo.GetAllActors()
 }
-func (s *ActorService) DeleteActorsById(id int) error {
-	return s.repo.DeleteActorsById(id)
+func (s *ActorService) DeleteActorsById(id int, force bool) error {
+	return s.repo.DeleteActorsById(id, force)
 }
 func (s *ActorService) DeleteActorsByName(name string) error {
 	if name == "" {
