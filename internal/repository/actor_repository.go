@@ -99,6 +99,34 @@ func (r *ActorsRepository) FindByName(name string) (*models.Actor, error) {
 	}
 	return actor, nil
 }
+func (r *ActorsRepository) SearchActorByName(search string, page, limit int) ([]models.Actor, int, error) {
+	countQuery := `SELECT COUNT(*) FROM actors WHERE name LIKE ?`
+	var total int
+	err := r.db.QueryRow(countQuery, "%"+search+"%").Scan(&total)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	offset := (page - 1) * limit
+	query := `SELECT * FROM actors WHERE name LIKE ? LIMIT ? OFFSET ?` //LIKE case insenstive GLOB is case sensitive
+	rows, err := r.db.Query(query, "%"+search+"%", limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	var actors []models.Actor
+	for rows.Next() {
+		var actor models.Actor
+		err := rows.Scan(&actor.Id, &actor.Name, &actor.CreatedAt, &actor.UpdatedAt)
+		if err != nil {
+			return nil, 0, err
+		}
+		actors = append(actors, actor)
+		actors = append(actors, actor)
+	}
+	return actors, total, rows.Err()
+}
 
 func (r *ActorsRepository) GetAllActors(page, limit int) ([]models.Actor, int, error) {
 	offset := (page - 1) * limit
