@@ -157,11 +157,11 @@ func (r *ActorsRepository) DeleteActorsById(id int, force bool) error {
 	}
 	// if force deletion isn't requested and actor has relation to movies
 	if count > 0 && !force {
-		return fmt.Errorf("can't actor %s, because it has %d related movie", name, count)
+		return fmt.Errorf("can't delete actor %s, because it has %d related movies", name, count)
 	}
 	// removing the relation first
 	if force {
-		_, err := r.db.Exec(`DELETE FROM movie_actors WHERE actor_id = ?, id`)
+		_, err := r.db.Exec(`DELETE FROM movie_actors WHERE actor_id = ?`, id)
 		if err != nil {
 			return err
 		}
@@ -183,20 +183,50 @@ func (r *ActorsRepository) DeleteActorsById(id int, force bool) error {
 	}
 	return nil
 }
-func (r *ActorsRepository) DeleteActorsByName(name string) error {
-	query := `
-	DELETE FROM actors WHERE name = ?`
 
-	result, err := r.db.Exec(query, name)
+// not needed because if we have multiple actors with the same name, it doesn't know which one to delete
+func (r *ActorsRepository) DeleteActorsByName(name string, force bool) error {
+	// checking if the actor exists by exracting the name using Id
+	var id int
+	err := r.db.QueryRow(
+		"SELECT id FROM actors WHERE name = ?", name,
+	).Scan(&id)
 	if err != nil {
-		return err
-	}
-	rowsDeleted, err := result.RowsAffected()
-	if err != nil {
-		return err
-	}
-	if rowsDeleted == 0 {
 		return ErrNotFound
 	}
-	return nil
+	// checking if the actor is related to any movies
+	var count int
+	err = r.db.QueryRow(
+		"SELECT COUNT(*) FROM movie_actors WHERE actor_id = ?", id,
+	).Scan(&count)
+
+	if err != nil {
+		return err
+	}
+	// if force deletion isn't requested and actor has relation to movies
+	if count > 0 && !force {
+		return fmt.Errorf("can't delete actor %s, because it has %d related movies", name, count)
+	}
+	// removing the relation first
+	if force {
+		_, err := r.db.Exec(`DELETE FROM movie_actors WHERE actor_id = ?`, id)
+		if err != nil {
+			return err
+		}
+	}
+	// delete the actor
+	query := `DELETE FROM actors WHERE id = ?`
+
+	_, err = r.db.Exec(query, id)
+	// if err != nil {
+	// 	return err
+	// }
+	// rowsDeleted, err := result.RowsAffected()
+	// if err != nil {
+	// 	return err
+	// }
+	// if rowsDeleted == 0 {
+	// 	return ErrNotFound
+	// }
+	return err
 }

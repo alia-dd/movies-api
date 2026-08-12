@@ -58,9 +58,9 @@ func (s *ActorService) GetAllActors() ([]models.Actor, error) {
 func (s *ActorService) DeleteActorsById(id int, force bool) error {
 	return s.repo.DeleteActorsById(id, force)
 }
-func (s *ActorService) DeleteActorsByName(name string) error {
+func (s *ActorService) DeleteActorsByName(name string, force bool) error {
 	if name == "" {
 		return repository.ErrInvalidInput
 	}
-	return s.repo.DeleteActorsByName(name)
+	return s.repo.DeleteActorsByName(name, force)
 }

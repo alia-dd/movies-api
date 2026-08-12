@@ -126,8 +126,8 @@ func (h *ActorHandler) DeleteActorsById(w http.ResponseWriter, r *http.Request) 
 func (h *ActorHandler) DeleteActorsByName(w http.ResponseWriter, r *http.Request) {
 
 	name := r.PathValue("name")
-
-	err := h.service.DeleteActorsByName(name)
+	force := r.URL.Query().Get("force") == "true"
+	err := h.service.DeleteActorsByName(name, force)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
