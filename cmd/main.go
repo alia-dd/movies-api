@@ -7,13 +7,13 @@ import (
 )
 
 func main() {
-
 	port := ":8000"
-	fmt.Println("server running on localhost", port)
+	// database.FetchSeedData()
 	srv, err := route()
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
+		return
 	}
 	log.Fatal(http.ListenAndServe(port, srv))
-
+	fmt.Println("server running on localhost", port)
 }

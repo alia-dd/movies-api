@@ -2,8 +2,8 @@ package handler
 
 import (
 	"encoding/json"
-	"moviesApi/internal/models"
-	"moviesApi/internal/service"
+	"movies-api/internal/models"
+	"movies-api/internal/service"
 	"net/http"
 	"strconv"
 )
@@ -39,7 +39,7 @@ func (h *ActorHandler) CreateActor(w http.ResponseWriter, r *http.Request) {
 
 func (h *ActorHandler) UpdateActor(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
-	if err != nil{
+	if err != nil {
 		http.Error(w, "invalid actor id", http.StatusBadRequest)
 		return
 	}
@@ -127,7 +127,6 @@ func (h *ActorHandler) DeleteActorsByName(w http.ResponseWriter, r *http.Request
 
 	name := r.PathValue("name")
 
-	
 	err := h.service.DeleteActorsByName(name)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

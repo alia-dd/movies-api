@@ -1,8 +1,8 @@
 package service
 
 import (
-	"moviesApi/internal/models"
-	"moviesApi/internal/repository"
+	"movies-api/internal/models"
+	"movies-api/internal/repository"
 	"time"
 )
 
@@ -21,7 +21,7 @@ func (s *ActorService) CreateActor(actor *models.Actor) error {
 		return repository.ErrInvalidInput
 	}
 	_, err := time.Parse("2006-01-02", actor.BirthDate)
-	if err != nil{
+	if err != nil {
 		return repository.ErrInvalidInput
 	}
 	return s.repo.CreateActor(actor)
@@ -33,7 +33,7 @@ func (s *ActorService) UpdateActor(actor *models.Actor) error {
 		return repository.ErrInvalidInput
 	}
 	_, err := time.Parse("2006-01-02", actor.BirthDate)
-	if err != nil{
+	if err != nil {
 		return repository.ErrInvalidInput
 	}
 	return s.repo.Update(actor)

@@ -1,5 +1,7 @@
-module moviesApi
+module movies-api
 
-go 1.25.0
+go 1.25.7
 
-require github.com/mattn/go-sqlite3 v1.14.49 // indirect
+require github.com/joho/godotenv v1.5.1
+
+require github.com/mattn/go-sqlite3 v1.14.49

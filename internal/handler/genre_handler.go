@@ -2,8 +2,9 @@ package handler
 
 import (
 	"encoding/json"
-	"moviesApi/internal/models"
-	"moviesApi/internal/service"
+	"movies-api/internal/models"
+	"movies-api/internal/service"
+
 	"net/http"
 	"strconv"
 )

@@ -1,8 +1,8 @@
 package service
 
 import (
-	"moviesApi/internal/models"
-	"moviesApi/internal/repository"
+	"movies-api/internal/models"
+	"movies-api/internal/repository"
 	"strings"
 )
 

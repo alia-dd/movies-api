@@ -3,7 +3,7 @@ package repository
 import (
 	"database/sql"
 	"errors"
-	"moviesApi/internal/models"
+	"movies-api/internal/models"
 	"strings"
 	"time"
 )
@@ -12,7 +12,6 @@ var (
 	ErrNotFound     = errors.New("record Not Found")
 	ErrDuplicateKey = errors.New("duplicate key violaion")
 	ErrInvalidInput = errors.New("Invalid Input")
-
 )
 
 type ActorsRepository struct {
