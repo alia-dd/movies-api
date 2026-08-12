@@ -26,19 +26,13 @@ func NewActorRepository(db *sql.DB) *ActorsRepository {
 
 func (r *ActorsRepository) CreateActor(actor *models.Actor) error {
 
-	query := `
-	INSERT INTO actors(name, birthdate)
-	VALUES(?,?)
-	`
+	query := `INSERT INTO actors(name, birthdate) VALUES(?,?)`
 
 	now := time.Now()
 	result, err := r.db.Exec(query, actor.Name, actor.BirthDate)
 	if err != nil {
-		if err != nil {
-			if strings.Contains(err.Error(), "UNIQUE constraint failed") {
-				return ErrDuplicateKey
-			}
-			return err
+		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
+			return ErrDuplicateKey
 		}
 		return err
 	}
@@ -53,11 +47,7 @@ func (r *ActorsRepository) CreateActor(actor *models.Actor) error {
 }
 
 func (r *ActorsRepository) Update(actor *models.Actor) error {
-	query := `
-	UPDATE actors
-	SET name = ?, birthdate = ?, updated_at = ?
-	WHERE id = ?
-	`
+	query := `UPDATE actors	SET name = ?, birthdate = ?, updated_at = ?	WHERE id = ?`
 	now := time.Now()
 	result, err := r.db.Exec(query, actor.Name, actor.BirthDate, now, actor.Id)
 	if err != nil {
@@ -75,8 +65,7 @@ func (r *ActorsRepository) Update(actor *models.Actor) error {
 }
 
 func (r *ActorsRepository) FindById(id int) (*models.Actor, error) {
-	query := `
-	SELECT id,name,birthdate FROM actors WHERE id = ?`
+	query := `SELECT id,name,birthdate FROM actors WHERE id = ?`
 	actor := &models.Actor{}
 
 	err := r.db.QueryRow(query, id).Scan(
@@ -94,8 +83,7 @@ func (r *ActorsRepository) FindById(id int) (*models.Actor, error) {
 }
 
 func (r *ActorsRepository) FindByName(name string) (*models.Actor, error) {
-	query := `
-	SELECT id,name,birthdate FROM actors WHERE name = ?`
+	query := `SELECT id,name,birthdate FROM actors WHERE name = ?`
 	actor := &models.Actor{}
 
 	err := r.db.QueryRow(query, name).Scan(
@@ -112,15 +100,20 @@ func (r *ActorsRepository) FindByName(name string) (*models.Actor, error) {
 	return actor, nil
 }
 
-func (r *ActorsRepository) GetAllActors() ([]models.Actor, error) {
-	query := `
-	SELECT id, name, birthdate FROM actors`
+func (r *ActorsRepository) GetAllActors(page, limit int) ([]models.Actor, int, error) {
+	offset := (page - 1) * limit
+	query := `SELECT * FROM actors LIMIT ? OFFSET ?`
+	var total int
+	count := `SELECT COUNT(*) FROM actors`
+	r.db.QueryRow(count).Scan(&total)
+	rows, err := r.db.Query(query, limit, offset)
+
+	if err != nil {
+		return nil, total, err
+	}
+	defer rows.Close()
 
 	actors := []models.Actor{}
-	rows, err := r.db.Query(query)
-	if err != nil {
-		return nil, err
-	}
 	for rows.Next() {
 		var actor models.Actor
 		err := rows.Scan(
@@ -129,16 +122,16 @@ func (r *ActorsRepository) GetAllActors() ([]models.Actor, error) {
 			&actor.BirthDate,
 		)
 		if err != nil {
-			return nil, err
+			return nil, total, err
 		}
 		actors = append(actors, actor)
 	}
-	return actors, err
+
+	return actors, total, err
 }
 
 func (r *ActorsRepository) DeleteActorsById(id int) error {
-	query := `
-	DELETE FROM actors WHERE id = ?`
+	query := `DELETE FROM actors WHERE id = ?`
 
 	result, err := r.db.Exec(query, id)
 	if err != nil {
@@ -155,8 +148,7 @@ func (r *ActorsRepository) DeleteActorsById(id int) error {
 }
 
 func (r *ActorsRepository) DeleteActorsByName(name string) error {
-	query := `
-	DELETE FROM actors WHERE name = ?`
+	query := `DELETE FROM actors WHERE name = ?`
 
 	result, err := r.db.Exec(query, name)
 	if err != nil {
