@@ -44,10 +44,10 @@ func route() (http.Handler, error) {
 	movieHandler := handler.NewMovieHandler(movieService)
 
 	// Movie routes
-	mux.HandleFunc("POST /api/movies", movieHandler.PostMovie)
-	mux.HandleFunc("GET /api/movies", movieHandler.GetMovies)
+	mux.HandleFunc("POST /api/movies", movieHandler.CreateMovie)
+	mux.HandleFunc("GET /api/movies", movieHandler.GetAllMovies)
 	mux.HandleFunc("GET /api/movies/{id}", movieHandler.GetMoviesById)
-	mux.HandleFunc("PATCH /api/movies/{id}", handler.PatchMovie)
+	mux.HandleFunc("PATCH /api/movies/{id}", handler.UpdateMovie)
 	mux.HandleFunc("DELETE /api/movies/{id}", movieHandler.DeleteMovie)
 	mux.HandleFunc("GET /api/movies/{movieId}/actors", movieHandler.GetActorsForMovie) // get all actor in selected movie
 

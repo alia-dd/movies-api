@@ -18,7 +18,7 @@ func NewMovieHandler(service *service.MovieService) *Handler {
 	return &Handler{service: service}
 }
 
-func (h *Handler) GetMovies(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetAllMovies(w http.ResponseWriter, r *http.Request) {
 
 	var f models.Filter
 	f.Genre = r.URL.Query().Get("genre")
@@ -78,7 +78,7 @@ func (h *Handler) GetMoviesById(w http.ResponseWriter, r *http.Request) {
 }
 
 // add new movie to the db
-func (h *Handler) PostMovie(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) CreateMovie(w http.ResponseWriter, r *http.Request) {
 	var movie models.Movies
 	jsonErr := json.NewDecoder(r.Body).Decode(&movie)
 	if jsonErr != nil {
