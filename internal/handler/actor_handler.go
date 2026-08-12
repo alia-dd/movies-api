@@ -39,7 +39,7 @@ func (h *ActorHandler) CreateActor(w http.ResponseWriter, r *http.Request) {
 
 func (h *ActorHandler) UpdateActor(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
-	if err != nil{
+	if err != nil {
 		http.Error(w, "invalid actor id", http.StatusBadRequest)
 		return
 	}
@@ -108,30 +108,48 @@ func (h *ActorHandler) GetActorByName(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(actor)
 }
 
-func (h *ActorHandler) DeleteActorsById(w http.ResponseWriter, r *http.Request) {
+// func (h *ActorHandler) DeleteActorsById(w http.ResponseWriter, r *http.Request) {
 
-	Id, errId := strconv.Atoi(r.PathValue("id"))
-	if errId != nil {
-		http.Error(w, "Invalid actor id", http.StatusBadRequest)
-		return
-	}
+// 	Id, errId := strconv.Atoi(r.PathValue("id"))
+// 	if errId != nil {
+// 		http.Error(w, "Invalid actor id", http.StatusBadRequest)
+// 		return
+// 	}
 
-	err := h.service.DeleteActorsById(Id)
+// 	err := h.service.DeleteActorsById(Id)
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusBadRequest)
+// 		return
+// 	}
+// 	w.WriteHeader(http.StatusNoContent)
+// }
+
+func (h *ActorHandler) DeleteActorsByName(w http.ResponseWriter, r *http.Request) {
+
+	name := r.PathValue("name")
+
+	err := h.service.DeleteActorsByName(name)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
-func (h *ActorHandler) DeleteActorsByName(w http.ResponseWriter, r *http.Request) {
+func (h *ActorHandler) DeleteActorsById(w http.ResponseWriter, r *http.Request) {
 
-	name := r.PathValue("name")
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "Invalid actor id", http.StatusBadRequest)
+		return
+	}
 
-	
-	err := h.service.DeleteActorsByName(name)
+	force := r.URL.Query().Get("force") == "true"
+
+	err = h.service.DeleteActorsById(id, force)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
 	w.WriteHeader(http.StatusNoContent)
 }

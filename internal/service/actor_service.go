@@ -52,8 +52,8 @@ func (s *ActorService) FindByName(name string) (*models.Actor, error) {
 func (s *ActorService) GetAllActors() ([]models.Actor, error) {
 	return s.repo.GetAllActors()
 }
-func (s *ActorService) DeleteActorsById(id int) error {
-	return s.repo.DeleteActorsById(id)
+func (s *ActorService) DeleteActorsById(id int, force bool) error {
+	return s.repo.DeleteActorsById(id, force)
 }
 func (s *ActorService) DeleteActorsByName(name string) error {
 	if name == "" {
@@ -61,3 +61,4 @@ func (s *ActorService) DeleteActorsByName(name string) error {
 	}
 	return s.repo.DeleteActorsByName(name)
 }
+
