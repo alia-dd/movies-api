@@ -8,6 +8,7 @@ import (
 	"movies-api/internal/service"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 type Handler struct {
@@ -21,11 +22,11 @@ func NewMovieHandler(service *service.MovieService) *Handler {
 func (h *Handler) GetAllMovies(w http.ResponseWriter, r *http.Request) {
 
 	var f models.Filter
-	f.Genre = r.URL.Query().Get("genre")
-	f.Actor = r.URL.Query().Get("actor")
-	f.Year = r.URL.Query().Get("year")
-	f.Page = r.URL.Query().Get("page")
-	f.Size = r.URL.Query().Get("size")
+	f.Genre = strings.TrimSpace(r.URL.Query().Get("genre"))
+	f.Actor = strings.TrimSpace(r.URL.Query().Get("actor"))
+	f.Year = strings.TrimSpace(r.URL.Query().Get("year"))
+	f.Page = strings.TrimSpace(r.URL.Query().Get("page"))
+	f.Size = strings.TrimSpace(r.URL.Query().Get("size"))
 
 	payload, err := h.service.GetMovie(f)
 	if err == sql.ErrNoRows {
@@ -45,8 +46,8 @@ func (h *Handler) GetAllMovies(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetMoviesById(w http.ResponseWriter, r *http.Request) {
-	var payload *models.Movies
-	var byTitlePayload []models.Movies
+	var payload *models.MoviesDisplay
+	var byTitlePayload []models.MoviesDisplay
 	var err error
 	id, idErr := strconv.Atoi(r.PathValue("id"))
 	if idErr != nil {
@@ -106,7 +107,7 @@ func (h *Handler) CreateMovie(w http.ResponseWriter, r *http.Request) {
 }
 
 // update movie with given id with the given data
-func PatchMovie(w http.ResponseWriter, r *http.Request) {
+func UpdateMovie(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	w.Write([]byte(id))
 }
@@ -137,24 +138,5 @@ func (h *Handler) DeleteMovie(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetActorsForMovie(w http.ResponseWriter, r *http.Request) {
-	// id, idErr := strconv.Atoi(r.PathValue("id"))
-	// if idErr != nil {
-	// 	w.WriteHeader(http.StatusBadRequest)
-	// 	return
-	// }
 
-	// payload, err := h.service.(id)
-	// if err != nil {
-	// 	w.WriteHeader(http.StatusBadRequest)
-	// 	return
-	// }
-
-	// w.WriteHeader(http.StatusAccepted)
-	// jsonData, err := json.Marshal(payload)
-	// if err != nil {
-	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-	// 	return
-	// }
-
-	// w.Write(jsonData)
 }
