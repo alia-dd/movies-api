@@ -50,6 +50,14 @@ func (s *MovieService) SearchMovieByTitle(title string) ([]models.MoviesDisplay,
 	return payload, err
 }
 
+func (s *MovieService) GetActorsForMovie(id int) ([]string, error) {
+	payload, err := s.repo.GetActorsForMovie(id)
+	return payload, err
+}
+func (s *MovieService) GetGenresForMovie(id int) ([]string, error) {
+	payload, err := s.repo.GetGenresForMovie(id)
+	return payload, err
+}
 func (s *MovieService) CreateMovie(movie models.Movies) (*models.MoviesDisplay, error) {
 	year, err := strconv.Atoi(movie.ReleaseYear)
 	if err != nil || movie.Title == "" || year < 1888 || year > time.Now().Year() {
