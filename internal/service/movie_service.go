@@ -18,28 +18,7 @@ func NewMovieService(repo *repository.MovieRepository) *MovieService {
 	return &MovieService{repo: repo}
 }
 
-func (s *MovieService) GetMovie(f models.Filter) ([]models.Movies, error) {
-	if f.Genre != "" {
-		genreID, err := strconv.Atoi(f.Genre)
-		if err != nil || genreID < 0 {
-			log.Printf("Invalid Genre ID: Genre must be zero or a positive integer")
-			f.Genre = ""
-		}
-	}
-	if f.Year != "" {
-		year, err := strconv.Atoi(f.Year)
-		if err != nil || year < 1888 || year > time.Now().Year() {
-			log.Printf("Invalid Yead")
-			f.Year = ""
-		}
-	}
-	if f.Actor != "" {
-		ActorID, err := strconv.Atoi(f.Actor)
-		if err != nil || ActorID < 0 {
-			log.Printf("Invalid Genre ID: Genre must be zero or a positive integer")
-			f.Actor = ""
-		}
-	}
+func (s *MovieService) GetMovie(f models.Filter) ([]models.MoviesDisplay, error) {
 	if f.Page != "" {
 		page, err := strconv.Atoi(f.Page)
 		if err != nil || page <= 0 {
@@ -54,30 +33,30 @@ func (s *MovieService) GetMovie(f models.Filter) ([]models.Movies, error) {
 			f.Size = ""
 		}
 	}
-	payload, err := s.repo.Get(f)
+	payload, err := s.repo.Get(&f)
 	return payload, err
 }
 
-func (s *MovieService) GetMovieById(id int) (*models.Movies, error) {
+func (s *MovieService) GetMovieById(id int) (*models.MoviesDisplay, error) {
 	payload, err := s.repo.GetById(id)
 	return payload, err
 }
-func (s *MovieService) GetMovieByTitle(title string) (*models.Movies, error) {
+func (s *MovieService) GetMovieByTitle(title string) (*models.MoviesDisplay, error) {
 	payload, err := s.repo.GetByTitle(title)
 	return payload, err
 }
-func (s *MovieService) SearchMovieByTitle(title string) ([]models.Movies, error) {
+func (s *MovieService) SearchMovieByTitle(title string) ([]models.MoviesDisplay, error) {
 	payload, err := s.repo.SearchByTitle(title)
 	return payload, err
 }
 
-func (s *MovieService) CreateMovie(movie models.Movies) (*models.Movies, error) {
+func (s *MovieService) CreateMovie(movie models.Movies) (*models.MoviesDisplay, error) {
 	year, err := strconv.Atoi(movie.ReleaseYear)
 	if err != nil || movie.Title == "" || year < 1888 || year > time.Now().Year() {
 		return nil, fmt.Errorf("Invalid input")
 	}
 	movieId, err := s.repo.Post(movie)
-	var lastInsetedMovie *models.Movies
+	var lastInsetedMovie *models.MoviesDisplay
 	if err == nil {
 		lastInsetedMovie, _ = s.repo.GetById(int(movieId))
 	}
@@ -88,24 +67,26 @@ func (s *MovieService) DeleteMovie(id string, force string) error {
 	if forceErr != nil {
 		return fmt.Errorf("force must be a boolean %w", forceErr)
 	}
-	var sentencedMovie *models.Movies
 	var sentencederr error
+	fmt.Println("here")
 	mId, idErr := strconv.Atoi(id)
 	if idErr != nil {
+		var sentencedMovie *models.MoviesDisplay
 		sentencedMovie, sentencederr = s.GetMovieByTitle(id)
-	} else {
-		sentencedMovie, sentencederr = s.GetMovieById(mId)
+		mId = sentencedMovie.Id
 	}
 	if sentencederr != nil {
 		return sentencederr
 	}
-	gid := len(sentencedMovie.GenreId)
-	aId := len(sentencedMovie.ActorId)
-	if !forcebool && gid > 0 {
-		return fmt.Errorf("Cannot delete movie %s because it has %d associated genre", id, gid)
+
+	_, gCount := s.repo.GetMovie_genre(mId)
+	_, aCount := s.repo.GetMovie_actor(mId)
+	fmt.Println(gCount, aCount)
+	if !forcebool && gCount > 0 {
+		return fmt.Errorf("Cannot delete movie %s because it has %d associated genre", id, gCount)
 	}
-	if !forcebool && aId > 0 {
-		return fmt.Errorf("Cannot delete movie %s because it has %d associated actors", id, aId)
+	if !forcebool && aCount > 0 {
+		return fmt.Errorf("Cannot delete movie %s because it has %d associated actors", id, aCount)
 	}
 	affectedR, err := s.repo.Delete(mId, forcebool)
 	if err != nil {
