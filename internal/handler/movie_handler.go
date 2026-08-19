@@ -145,7 +145,7 @@ func (h *Handler) GetGenresForMovie(w http.ResponseWriter, r *http.Request) {
 	if idErr != nil {
 		movie, movieErr := h.service.GetMovieByTitle(r.PathValue("movieId"))
 		if movieErr != nil {
-			messge := "Error Retreiving the movie"
+			messge := "Invalid Movie ID"
 			if movieErr == sql.ErrNoRows {
 				messge = "Movie Not Found"
 			}
@@ -187,7 +187,7 @@ func (h *Handler) GetActorsForMovie(w http.ResponseWriter, r *http.Request) {
 	if idErr != nil {
 		movie, movieErr := h.service.GetMovieByTitle(r.PathValue("movieId"))
 		if movieErr != nil {
-			messge := "Error Retreiving the movie"
+			messge := "Invalid Movie ID"
 			if movieErr == sql.ErrNoRows {
 				messge = "Movie Not Found"
 			}

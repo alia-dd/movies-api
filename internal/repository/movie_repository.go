@@ -225,6 +225,7 @@ func (r *MovieRepository) Delete(MovieId int, force bool) (int64, error) {
 	return affectedR, nil
 }
 
+// this method returns the genreIds of provided movieId
 func (r *MovieRepository) GetMovie_genre(MovieId int) ([]int, int) {
 	count := 0
 	genresId := []int{}
@@ -246,8 +247,7 @@ func (r *MovieRepository) GetMovie_genre(MovieId int) ([]int, int) {
 	return genresId, count
 }
 
-// Gladiator
-// 197
+// this method returns the actorIds of provided movieId
 func (r *MovieRepository) GetMovie_actor(MovieId int) ([]int, int) {
 	count := 0
 	actorsId := []int{}
@@ -270,36 +270,12 @@ func (r *MovieRepository) GetMovie_actor(MovieId int) ([]int, int) {
 	return actorsId, count
 }
 
-// func (r *MovieRepository) getInfo(MovieId int) ([]string, []string) {
-// 	movieGenres := []string{}
-// 	movieActors := []string{}
-
-// 	actorRepo := NewActorRepository(r.DB)
-// 	genreRepo := NewGenreRepository(r.DB)
-
-// 	actorsId, _ := r.GetMovie_actor(MovieId)
-// 	genresId, _ := r.GetMovie_genre(MovieId)
-
-//		for _, actorid := range actorsId {
-//			actor, err := actorRepo.FindById(actorid)
-//			if err != nil {
-//				continue
-//			}
-//			movieActors = append(movieActors, actor.Name)
-//		}
-//		for _, genreId := range genresId {
-//			genre, err := genreRepo.GetGenreByID(genreId)
-//			if err != nil {
-//				continue
-//			}
-//			movieGenres = append(movieGenres, genre.Name)
-//		}
-//		return movieActors, movieGenres
-//	}
+// this method returnes the names of genres of a provided movieId by using the GetMovie_genre function
 func (r *MovieRepository) GetGenresForMovie(MovieId int) ([]string, error) {
 	movieGenres := []string{}
 	genreRepo := NewGenreRepository(r.DB)
 	genresId, _ := r.GetMovie_genre(MovieId)
+
 	for _, genreId := range genresId {
 		genre, err := genreRepo.GetGenreByID(genreId)
 		if err != nil {
@@ -309,13 +285,13 @@ func (r *MovieRepository) GetGenresForMovie(MovieId int) ([]string, error) {
 	}
 	return movieGenres, nil
 }
+
+// this method returnes the names of actors of a provided movieId by using the GetMovie_actor function
 func (r *MovieRepository) GetActorsForMovie(MovieId int) ([]string, error) {
 	movieActors := []string{}
 	actorRepo := NewActorRepository(r.DB)
-	actorsId, actorsIdErr := r.GetMovie_actor(MovieId)
-	if actorsIdErr == 0 {
-		return []string{}, fmt.Errorf("failed to retreive actors for MOVIES id: ", MovieId)
-	}
+	actorsId, _ := r.GetMovie_actor(MovieId)
+
 	for _, actorid := range actorsId {
 		actor, err := actorRepo.FindById(actorid)
 		if err != nil {
