@@ -50,6 +50,7 @@ func route() (http.Handler, error) {
 	mux.HandleFunc("PATCH /api/movies/{id}", movieHandler.UpdateMovie)
 	mux.HandleFunc("DELETE /api/movies/{id}", movieHandler.DeleteMovie)
 	mux.HandleFunc("GET /api/movies/{movieId}/actors", movieHandler.GetActorsForMovie) // get all actor in selected movie
+	mux.HandleFunc("GET /api/movies/{movieId}/genres", movieHandler.GetGenresForMovie) // get all actor in selected movie
 
 	// Genre routes
 	genreRepo := repository.NewGenreRepository(db)
@@ -58,8 +59,9 @@ func route() (http.Handler, error) {
 
 	mux.HandleFunc("POST /api/genres", genreHandler.CreateGenre)
 	mux.HandleFunc("GET /api/genres", genreHandler.GetAllGenres)
+	mux.HandleFunc("GET /api/genres/search", genreHandler.SearchGenreByName)
 	mux.HandleFunc("GET /api/genres/{id}", genreHandler.GetGenreByID)
-	mux.HandleFunc("PUT /api/genres/{id}", genreHandler.UpdateGenre)
+	mux.HandleFunc("PATCH /api/genres/{id}", genreHandler.UpdateGenre)
 	mux.HandleFunc("DELETE /api/genres/{id}", genreHandler.DeleteGenreByID)
 	mux.HandleFunc("DELETE /api/genres/name/{name}", genreHandler.DeleteGenreByName)
 	return mux, nil

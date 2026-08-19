@@ -104,7 +104,7 @@ func (h *Handler) CreateMovie(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusCreated)
 	w.Write(jsonData)
 }
 
@@ -169,10 +169,91 @@ func (h *Handler) DeleteMovie(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusNoContent)
 	w.Write(jsonData)
 }
 
-func (h *Handler) GetActorsForMovie(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetGenresForMovie(w http.ResponseWriter, r *http.Request) {
+	cx := r.Context()
+	var payload []string
+	var err error
+	id, idErr := strconv.Atoi(r.PathValue("movieId"))
+	if idErr != nil {
+		movie, movieErr := h.service.GetMovieByTitle(cx, r.PathValue("movieId"))
+		if movieErr != nil {
+			messge := "Invalid Movie ID"
+			if movieErr == sql.ErrNoRows {
+				messge = "Movie Not Found"
+			}
+			jsonData, err := json.Marshal([]string{"message: ", messge})
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write(jsonData)
+			return
+		}
+		id = movie.Id
+	}
+	payload, err = h.service.GetGenresForMovie(cx, id)
 
+	if err == sql.ErrNoRows {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	} else if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	jsonData, jsonErr := json.MarshalIndent(payload, "", "  ")
+
+	if jsonErr != nil {
+		http.Error(w, jsonErr.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonData)
+}
+func (h *Handler) GetActorsForMovie(w http.ResponseWriter, r *http.Request) {
+	cx := r.Context()
+	var payload []string
+	var err error
+	id, idErr := strconv.Atoi(r.PathValue("movieId"))
+	if idErr != nil {
+		movie, movieErr := h.service.GetMovieByTitle(cx, r.PathValue("movieId"))
+		if movieErr != nil {
+			messge := "Invalid Movie ID"
+			if movieErr == sql.ErrNoRows {
+				messge = "Movie Not Found"
+			}
+			jsonData, err := json.Marshal([]string{"message: ", messge})
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write(jsonData)
+			return
+		}
+		id = movie.Id
+	}
+	payload, err = h.service.GetActorsForMovie(cx, id)
+
+	if err == sql.ErrNoRows {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	} else if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	jsonData, jsonErr := json.MarshalIndent(payload, "", "  ")
+
+	if jsonErr != nil {
+		http.Error(w, jsonErr.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonData)
 }

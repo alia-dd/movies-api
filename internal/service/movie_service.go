@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"movies-api/internal/errors"
 	"movies-api/internal/models"
 	"movies-api/internal/repository"
 	"strconv"
@@ -14,7 +15,6 @@ type MovieService struct {
 	repo *repository.MovieRepository
 }
 
-// meshan waxaa uguwaxdaa repoga haa waxan dhan waakabodi karate
 func NewMovieService(repo *repository.MovieRepository) *MovieService {
 	return &MovieService{repo: repo}
 }
@@ -51,10 +51,18 @@ func (s *MovieService) SearchMovieByTitle(cx context.Context, title string) ([]m
 	return payload, err
 }
 
+func (s *MovieService) GetActorsForMovie(cx context.Context, id int) ([]string, error) {
+	payload, err := s.repo.GetActorsForMovie(cx, id)
+	return payload, err
+}
+func (s *MovieService) GetGenresForMovie(cx context.Context, id int) ([]string, error) {
+	payload, err := s.repo.GetGenresForMovie(cx, id)
+	return payload, err
+}
 func (s *MovieService) CreateMovie(cx context.Context, movie models.Movies) (*models.MoviesDisplay, error) {
 	year, err := strconv.Atoi(movie.ReleaseYear)
 	if err != nil || movie.Title == "" || year < 1888 || year > time.Now().Year() {
-		return nil, fmt.Errorf("Invalid input")
+		return nil, errors.ErrInvalidInput
 	}
 	movieId, postErr := s.repo.Post(cx, movie)
 	if postErr != nil {
@@ -64,7 +72,9 @@ func (s *MovieService) CreateMovie(cx context.Context, movie models.Movies) (*mo
 }
 
 func (s *MovieService) UpdateMovie(cx context.Context, id int, m models.MovieUpdate) (*models.MoviesDisplay, error) {
-	// handle check here
+	if m.ReleaseYear != nil && (*m.ReleaseYear < 1888 || *m.ReleaseYear > time.Now().Year()) {
+		return nil, errors.ErrInvalidInput
+	}
 	if _, err := s.repo.GetById(cx, id); err != nil {
 		return nil, err
 	}
@@ -80,7 +90,6 @@ func (s *MovieService) DeleteMovie(cx context.Context, id string, force string) 
 		return fmt.Errorf("force must be a boolean %w", forceErr)
 	}
 	var sentencederr error
-	fmt.Println("here")
 	mId, idErr := strconv.Atoi(id)
 	if idErr != nil {
 		var sentencedMovie *models.MoviesDisplay

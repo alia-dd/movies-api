@@ -48,7 +48,7 @@ func (r *MovieRepository) Get(cx context.Context, f *models.Filter) ([]models.Mo
 		arg = append(arg, f.Year)
 	}
 	query += extraQuery
-	size, page := -1, 1
+	size, page := -1, 0
 	if f.Size != "" {
 		if s, err := strconv.Atoi(f.Size); err == nil {
 			size = s
@@ -59,7 +59,7 @@ func (r *MovieRepository) Get(cx context.Context, f *models.Filter) ([]models.Mo
 	}
 	if size > -1 {
 		query += ` Limit ?  OFFSET ? `
-		arg = append(arg, size, (page-1)*size)
+		arg = append(arg, size, page*size)
 
 	}
 
@@ -68,6 +68,7 @@ func (r *MovieRepository) Get(cx context.Context, f *models.Filter) ([]models.Mo
 		return nil, rowErr
 	}
 	defer rows.Close()
+
 	movies := []models.MoviesDisplay{}
 	for rows.Next() {
 		movie := models.Movies{}
@@ -93,7 +94,8 @@ func (r *MovieRepository) Get(cx context.Context, f *models.Filter) ([]models.Mo
 	}
 
 	for i := range movies {
-		movieActors, movieGenres := r.getInfo(cx, movies[i].Id)
+		movieActors, _ := r.GetActorsForMovie(cx, movies[i].Id)
+		movieGenres, _ := r.GetGenresForMovie(cx, movies[i].Id)
 		movies[i].Actors = movieActors
 		movies[i].Genres = movieGenres
 	}
@@ -108,11 +110,13 @@ func (r *MovieRepository) GetById(cx context.Context, id int) (*models.MoviesDis
 	if err != nil {
 		return nil, err
 	}
-	movieActors, movieGenres := r.getInfo(cx, movie.Id)
+	movieActors, _ := r.GetActorsForMovie(cx, movie.Id)
+	movieGenres, _ := r.GetGenresForMovie(cx, movie.Id)
 	movie.Actors = movieActors
 	movie.Genres = movieGenres
 	return &movie, nil
 }
+
 func (r *MovieRepository) GetByTitle(cx context.Context, title string) (*models.MoviesDisplay, error) {
 	row := r.DB.QueryRowContext(cx, "SELECT id, title, releaseYear, duration, overview, originalLanguage, created_at, updated_at FROM MOVIES WHERE title=? ", title)
 	movie := models.MoviesDisplay{}
@@ -120,7 +124,8 @@ func (r *MovieRepository) GetByTitle(cx context.Context, title string) (*models.
 	if err != nil {
 		return nil, err
 	}
-	movieActors, movieGenres := r.getInfo(cx, movie.Id)
+	movieActors, _ := r.GetActorsForMovie(cx, movie.Id)
+	movieGenres, _ := r.GetGenresForMovie(cx, movie.Id)
 	movie.Actors = movieActors
 	movie.Genres = movieGenres
 	return &movie, nil
@@ -146,7 +151,8 @@ func (r *MovieRepository) SearchByTitle(cx context.Context, title string) ([]mod
 	}
 
 	for i := range movies {
-		movieActors, movieGenres := r.getInfo(cx, movies[i].Id)
+		movieActors, _ := r.GetActorsForMovie(cx, movies[i].Id)
+		movieGenres, _ := r.GetGenresForMovie(cx, movies[i].Id)
 		movies[i].Actors = movieActors
 		movies[i].Genres = movieGenres
 	}
@@ -155,8 +161,6 @@ func (r *MovieRepository) SearchByTitle(cx context.Context, title string) ([]mod
 }
 
 func (r *MovieRepository) Post(cx context.Context, m models.Movies) (int64, error) {
-	actorRepo := NewActorRepository(r.DB)
-	genreRepo := NewGenreRepository(r.DB)
 	tx, txErr := r.DB.BeginTx(cx, nil)
 	if txErr != nil {
 		return 0, fmt.Errorf("Failed to begin transaction: %w", txErr)
@@ -174,21 +178,19 @@ func (r *MovieRepository) Post(cx context.Context, m models.Movies) (int64, erro
 		return 0, fmt.Errorf("failed to retreive last inserted MOVIES id: %w", resErr)
 	}
 	for _, genreID := range m.GenreId {
-		genre, err := genreRepo.GetGenreByID(genreID)
-		if err != nil || genre == nil {
-			continue
-		}
 		if _, mgErr := tx.ExecContext(cx, mgQuery, movieID, genreID); mgErr != nil {
+			if strings.Contains(mgErr.Error(), "UNIQUE constraint failed") {
+				continue
+			}
 			return 0, fmt.Errorf("failed to link genre %d to MOVIES %q: %w", genreID, m.Title, mgErr)
 		}
 	}
 
 	for _, actorID := range m.ActorId {
-		actor, err := actorRepo.FindById(actorID)
-		if err != nil || actor == nil {
-			continue
-		}
 		if _, maErr := tx.ExecContext(cx, maQuery, movieID, actorID); maErr != nil {
+			if strings.Contains(maErr.Error(), "UNIQUE constraint failed") {
+				continue
+			}
 			return 0, fmt.Errorf("failed to link actor %d to MOVIES %q: %w", actorID, m.Title, maErr)
 		}
 	}
@@ -280,6 +282,7 @@ func (r *MovieRepository) Patch(cx context.Context, id int, m models.MovieUpdate
 
 func (r *MovieRepository) Delete(cx context.Context, MovieId int, force bool) (int64, error) {
 	if force {
+
 		m, payloadErr := r.GetById(cx, MovieId)
 		if payloadErr != nil {
 			return 0, payloadErr
@@ -307,6 +310,7 @@ func (r *MovieRepository) Delete(cx context.Context, MovieId int, force bool) (i
 	return affectedR, nil
 }
 
+// this method returns the genreIds of provided movieId
 func (r *MovieRepository) GetMovie_genre(cx context.Context, MovieId int) ([]int, int) {
 	count := 0
 	genresId := []int{}
@@ -328,6 +332,7 @@ func (r *MovieRepository) GetMovie_genre(cx context.Context, MovieId int) ([]int
 	return genresId, count
 }
 
+// this method returns the actorIds of provided movieId
 func (r *MovieRepository) GetMovie_actor(cx context.Context, MovieId int) ([]int, int) {
 	count := 0
 	actorsId := []int{}
@@ -350,15 +355,29 @@ func (r *MovieRepository) GetMovie_actor(cx context.Context, MovieId int) ([]int
 	return actorsId, count
 }
 
-func (r *MovieRepository) getInfo(cx context.Context, MovieId int) ([]string, []string) {
+// this method returnes the names of genres of a provided movieId by using the GetMovie_genre function
+func (r *MovieRepository) GetGenresForMovie(cx context.Context, MovieId int) ([]string, error) {
+
 	movieGenres := []string{}
-	movieActors := []string{}
-
-	actorRepo := NewActorRepository(r.DB)
 	genreRepo := NewGenreRepository(r.DB)
-
-	actorsId, _ := r.GetMovie_actor(cx, MovieId)
 	genresId, _ := r.GetMovie_genre(cx, MovieId)
+
+	for _, genreId := range genresId {
+		genre, err := genreRepo.GetGenreByID(genreId)
+		if err != nil {
+			continue
+		}
+		movieGenres = append(movieGenres, genre.Name)
+	}
+	return movieGenres, nil
+}
+
+// this method returnes the names of actors of a provided movieId by using the GetMovie_actor function
+func (r *MovieRepository) GetActorsForMovie(cx context.Context, MovieId int) ([]string, error) {
+
+	movieActors := []string{}
+	actorRepo := NewActorRepository(r.DB)
+	actorsId, _ := r.GetMovie_actor(cx, MovieId)
 
 	for _, actorid := range actorsId {
 		actor, err := actorRepo.FindById(actorid)
@@ -367,16 +386,9 @@ func (r *MovieRepository) getInfo(cx context.Context, MovieId int) ([]string, []
 		}
 		movieActors = append(movieActors, actor.Name)
 	}
-	for _, genreId := range genresId {
-		genre, err := genreRepo.GetGenreByID(genreId)
-		if err != nil {
-			continue
-		}
-		movieGenres = append(movieGenres, genre.Name)
-	}
-	return movieActors, movieGenres
+	return movieActors, nil
 }
 
 func formatDurations(duration uint16) string {
-	return ""
+	return fmt.Sprintf("%02d h %02d m", duration/60, duration%60)
 }
