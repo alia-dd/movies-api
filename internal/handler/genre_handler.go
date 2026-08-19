@@ -4,18 +4,10 @@ import (
 	"encoding/json"
 	"movies-api/internal/models"
 	"movies-api/internal/service"
-
 	"net/http"
 	"strconv"
 )
 
-/*
-POST - createGenre
-GET - getAllGenres
-GET - getGenresByID
-PUT - updateGenre
-Delete -deleteGenreByName/ByID
-*/
 type GenreHandler struct {
 	genreService *service.GenreService
 }
@@ -28,15 +20,10 @@ func NewGenreHandler(genreService *service.GenreService) *GenreHandler {
 
 func (h *GenreHandler) CreateGenre(w http.ResponseWriter, r *http.Request) {
 	var genre models.Genre
-	/*
-	   r.Body-- is raw json from request
-	   NewDecoder parses json
-	   Decode(&genre) converts Json into go struct and populates genre
 
-	*/
 	err := json.NewDecoder(r.Body).Decode(&genre)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, "Invalid JSON format", http.StatusBadRequest)
 		return
 	}
 	err = h.genreService.CreateGenre(&genre)
@@ -44,13 +31,40 @@ func (h *GenreHandler) CreateGenre(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(genre)
 }
 
 func (h *GenreHandler) GetAllGenres(w http.ResponseWriter, r *http.Request) {
-	genres, err := h.genreService.GetAllGenres()
+	pageStr := r.URL.Query().Get("page")
+	if pageStr == "" {
+		pageStr = "1"
+	}
+	limitStr := r.URL.Query().Get("limit")
+	if limitStr == "" {
+		limitStr = "10"
+	}
+
+	page, err := strconv.Atoi(pageStr)
+	if err != nil {
+		http.Error(w, "invalid page parameter", http.StatusBadRequest)
+		return
+	}
+
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil {
+		http.Error(w, "invalid limit parameter", http.StatusBadRequest)
+		return
+	}
+
+	if page <= 0 || limit <= 0 {
+		http.Error(w, "page and limit must be greater than 0", http.StatusBadRequest)
+		return
+	}
+
+	genres, total, err := h.genreService.GetAllGenres(page, limit)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -58,60 +72,70 @@ func (h *GenreHandler) GetAllGenres(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(genres)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"data": genres,
+		"pagination": map[string]int{
+			"page":        page,
+			"limit":       limit,
+			"total":       total,
+			"total_pages": (total + limit - 1) / limit,
+		},
+	})
 }
 
 func (h *GenreHandler) GetGenreByID(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(r.PathValue("id"))
+	idStr := r.PathValue("id")
+	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "invalid genre id", http.StatusBadRequest)
+		http.Error(w, "invalid genre ID", http.StatusBadRequest)
 		return
 	}
 
 	genre, err := h.genreService.GetGenreByID(id)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(genre)
 }
 
-func (h *GenreHandler) UpdateGenre(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(r.PathValue("id"))
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+func (h *GenreHandler) SearchGenreByName(w http.ResponseWriter, r *http.Request) {
+	searchTerm := r.URL.Query().Get("q")
+	pageStr := r.URL.Query().Get("page")
+	if pageStr == "" {
+		pageStr = "1"
+	}
+	limitStr := r.URL.Query().Get("limit")
+	if limitStr == "" {
+		limitStr = "10"
+	}
+
+	if searchTerm == "" {
+		http.Error(w, "search query cannot be empty", http.StatusBadRequest)
 		return
 	}
 
-	var genre models.Genre
-
-	err = json.NewDecoder(r.Body).Decode(&genre)
+	page, err := strconv.Atoi(pageStr)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	err = h.genreService.UpdateGenre(id, genre.Name)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "invalid page parameter", http.StatusBadRequest)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader((http.StatusOK))
-	json.NewEncoder(w).Encode(map[string]string{"message": "Genre Updated"})
-
-}
-
-func (h *GenreHandler) DeleteGenreByID(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(r.PathValue("id"))
+	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, "invalid limit parameter", http.StatusBadRequest)
 		return
 	}
 
-	err = h.genreService.DeleteGenreByID(id)
+	if page <= 0 || limit <= 0 {
+		http.Error(w, "page and limit must be greater than 0", http.StatusBadRequest)
+		return
+	}
+
+	genres, total, err := h.genreService.SearchGenreByName(searchTerm, page, limit)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -119,7 +143,75 @@ func (h *GenreHandler) DeleteGenreByID(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "Genre Deleted"})
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"data": genres,
+		"pagination": map[string]int{
+			"page":        page,
+			"limit":       limit,
+			"total":       total,
+			"total_pages": (total + limit - 1) / limit,
+		},
+	})
+}
+
+func (h *GenreHandler) UpdateGenre(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "invalid genre ID", http.StatusBadRequest)
+		return
+	}
+
+	var updateData struct {
+		Name string `json:"name"`
+	}
+	err = json.NewDecoder(r.Body).Decode(&updateData)
+	if err != nil {
+		http.Error(w, "Invalid JSON format", http.StatusBadRequest)
+		return
+	}
+
+	err = h.genreService.UpdateGenre(id, updateData.Name)
+	if err != nil {
+		if err.Error() == "record not found" {
+			http.Error(w, "Genre not found", http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+
+	genre, _ := h.genreService.GetGenreByID(id)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(genre)
+}
+
+func (h *GenreHandler) DeleteGenreByID(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "invalid genre ID", http.StatusBadRequest)
+		return
+	}
+
+	forceStr := r.URL.Query().Get("force")
+	force := forceStr == "true"
+
+	err = h.genreService.DeleteGenreByID(id, force)
+	if err != nil {
+		if err.Error() == "record not found" {
+			http.Error(w, "Genre not found", http.StatusNotFound)
+			return
+		}
+		if !force {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *GenreHandler) DeleteGenreByName(w http.ResponseWriter, r *http.Request) {
@@ -129,13 +221,22 @@ func (h *GenreHandler) DeleteGenreByName(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	err := h.genreService.DeleteGenreByName(name)
+	forceStr := r.URL.Query().Get("force")
+	force := forceStr == "true"
+
+	err := h.genreService.DeleteGenreByName(name, force)
 	if err != nil {
+		if err.Error() == "record not found" {
+			http.Error(w, "Genre not found", http.StatusNotFound)
+			return
+		}
+		if !force {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "Genre Deleted"})
+	w.WriteHeader(http.StatusNoContent)
 }

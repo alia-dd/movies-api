@@ -47,7 +47,7 @@ func route() (http.Handler, error) {
 	mux.HandleFunc("POST /api/movies", movieHandler.CreateMovie)
 	mux.HandleFunc("GET /api/movies", movieHandler.GetAllMovies)
 	mux.HandleFunc("GET /api/movies/{id}", movieHandler.GetMoviesById)
-	mux.HandleFunc("PATCH /api/movies/{id}", handler.UpdateMovie)
+	//mux.HandleFunc("PATCH /api/movies/{id}", handler.UpdateMovie)
 	mux.HandleFunc("DELETE /api/movies/{id}", movieHandler.DeleteMovie)
 	mux.HandleFunc("GET /api/movies/{movieId}/actors", movieHandler.GetActorsForMovie) // get all actor in selected movie
 
@@ -58,8 +58,9 @@ func route() (http.Handler, error) {
 
 	mux.HandleFunc("POST /api/genres", genreHandler.CreateGenre)
 	mux.HandleFunc("GET /api/genres", genreHandler.GetAllGenres)
+	mux.HandleFunc("GET /api/genres/search", genreHandler.SearchGenreByName)
 	mux.HandleFunc("GET /api/genres/{id}", genreHandler.GetGenreByID)
-	mux.HandleFunc("PUT /api/genres/{id}", genreHandler.UpdateGenre)
+	mux.HandleFunc("PATCH /api/genres/{id}", genreHandler.UpdateGenre)
 	mux.HandleFunc("DELETE /api/genres/{id}", genreHandler.DeleteGenreByID)
 	mux.HandleFunc("DELETE /api/genres/name/{name}", genreHandler.DeleteGenreByName)
 	return mux, nil
