@@ -81,7 +81,7 @@ func FetchSeedData() {
 		foundGenres[genre.ID] = genre.Name
 	}
 
-	for page := 1; page <= 10; page++ {
+	for page := 1; page <= 5; page++ {
 		//  --url 'https://api.themoviedb.org/3/movie/popular?language=en-US&page=1' \
 
 		url := fmt.Sprintf("https://api.themoviedb.org/3/movie/popular?api_key=%s&page=%d", apiKey, page)
@@ -185,15 +185,15 @@ func FetchSeedData() {
 		log.Printf("Failed to marshal to actorList")
 		return
 	}
-	if movieErr := os.WriteFile("internal/database/data/tmdb_movies.json", movieOut, 0644); movieErr != nil {
+	if movieErr := os.WriteFile("internal/database/data/moviesData.json", movieOut, 0644); movieErr != nil {
 		log.Printf("Failed to write movies data to json Error: %v", movieErr)
 		return
 	}
-	if genreErr := os.WriteFile("internal/database/data/tmdb_genres.json", genreOut, 0644); genreErr != nil {
+	if genreErr := os.WriteFile("internal/database/data/genresData.json", genreOut, 0644); genreErr != nil {
 		log.Printf("Failed to write genre data to json Error: %v", genreErr)
 		return
 	}
-	if actorErr := os.WriteFile("internal/database/data/tmdb_actors.json", actorOut, 0644); actorErr != nil {
+	if actorErr := os.WriteFile("internal/database/data/actorsData.json", actorOut, 0644); actorErr != nil {
 		log.Printf("Failed to write actor data to json Error: %v", actorErr)
 		return
 	}

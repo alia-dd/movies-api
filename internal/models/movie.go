@@ -28,6 +28,19 @@ type Movies struct {
 	UpdatedAt time.Time `json:"updatedat"`
 }
 
+type MovieUpdate struct {
+	Title       *string `json:"title,omitempty"`
+	ReleaseYear *int    `json:"releaseYear,omitempty"`
+
+	Duration         *int    `json:"duration,omitempty"`
+	Overview         *string `json:"overview"`
+	OriginalLanguage *string `json:"original_language"`
+
+	AddActorIDs    []int `json:"addActorIds,omitempty"`
+	RemoveActorIDs []int `json:"removeActorIds,omitempty"`
+	AddGenreIDs    []int `json:"addGenreIds,omitempty"`
+	RemoveGenreIDs []int `json:"removeGenreIds,omitempty"`
+}
 type MoviesDisplay struct {
 	Id          int    `json:"id"`
 	Title       string `json:"title"`
