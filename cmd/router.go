@@ -50,6 +50,7 @@ func route() (http.Handler, error) {
 	//mux.HandleFunc("PATCH /api/movies/{id}", handler.UpdateMovie)
 	mux.HandleFunc("DELETE /api/movies/{id}", movieHandler.DeleteMovie)
 	mux.HandleFunc("GET /api/movies/{movieId}/actors", movieHandler.GetActorsForMovie) // get all actor in selected movie
+	mux.HandleFunc("GET /api/movies/{movieId}/genres", movieHandler.GetGenresForMovie) // get all actor in selected movie
 
 	// Genre routes
 	genreRepo := repository.NewGenreRepository(db)

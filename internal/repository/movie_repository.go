@@ -91,7 +91,8 @@ func (r *MovieRepository) Get(f *models.Filter) ([]models.MoviesDisplay, error) 
 	}
 
 	for i := range movies {
-		movieActors, movieGenres := r.getInfo(movies[i].Id)
+		movieActors, _ := r.GetActorsForMovie(movies[i].Id)
+		movieGenres, _ := r.GetGenresForMovie(movies[i].Id)
 		movies[i].Actors = movieActors
 		movies[i].Genres = movieGenres
 	}
@@ -106,7 +107,8 @@ func (r *MovieRepository) GetById(id int) (*models.MoviesDisplay, error) {
 	if err != nil {
 		return nil, err
 	}
-	movieActors, movieGenres := r.getInfo(movie.Id)
+	movieActors, _ := r.GetActorsForMovie(movie.Id)
+	movieGenres, _ := r.GetGenresForMovie(movie.Id)
 	movie.Actors = movieActors
 	movie.Genres = movieGenres
 	return &movie, nil
@@ -118,7 +120,8 @@ func (r *MovieRepository) GetByTitle(title string) (*models.MoviesDisplay, error
 	if err != nil {
 		return nil, err
 	}
-	movieActors, movieGenres := r.getInfo(movie.Id)
+	movieActors, _ := r.GetActorsForMovie(movie.Id)
+	movieGenres, _ := r.GetGenresForMovie(movie.Id)
 	movie.Actors = movieActors
 	movie.Genres = movieGenres
 	return &movie, nil
@@ -144,7 +147,8 @@ func (r *MovieRepository) SearchByTitle(title string) ([]models.MoviesDisplay, e
 	}
 
 	for i := range movies {
-		movieActors, movieGenres := r.getInfo(movies[i].Id)
+		movieActors, _ := r.GetActorsForMovie(movies[i].Id)
+		movieGenres, _ := r.GetGenresForMovie(movies[i].Id)
 		movies[i].Actors = movieActors
 		movies[i].Genres = movieGenres
 	}
@@ -221,6 +225,7 @@ func (r *MovieRepository) Delete(MovieId int, force bool) (int64, error) {
 	return affectedR, nil
 }
 
+// this method returns the genreIds of provided movieId
 func (r *MovieRepository) GetMovie_genre(MovieId int) ([]int, int) {
 	count := 0
 	genresId := []int{}
@@ -242,6 +247,7 @@ func (r *MovieRepository) GetMovie_genre(MovieId int) ([]int, int) {
 	return genresId, count
 }
 
+// this method returns the actorIds of provided movieId
 func (r *MovieRepository) GetMovie_actor(MovieId int) ([]int, int) {
 	count := 0
 	actorsId := []int{}
@@ -264,15 +270,27 @@ func (r *MovieRepository) GetMovie_actor(MovieId int) ([]int, int) {
 	return actorsId, count
 }
 
-func (r *MovieRepository) getInfo(MovieId int) ([]string, []string) {
+// this method returnes the names of genres of a provided movieId by using the GetMovie_genre function
+func (r *MovieRepository) GetGenresForMovie(MovieId int) ([]string, error) {
 	movieGenres := []string{}
-	movieActors := []string{}
-
-	actorRepo := NewActorRepository(r.DB)
 	genreRepo := NewGenreRepository(r.DB)
-
-	actorsId, _ := r.GetMovie_actor(MovieId)
 	genresId, _ := r.GetMovie_genre(MovieId)
+
+	for _, genreId := range genresId {
+		genre, err := genreRepo.GetGenreByID(genreId)
+		if err != nil {
+			continue
+		}
+		movieGenres = append(movieGenres, genre.Name)
+	}
+	return movieGenres, nil
+}
+
+// this method returnes the names of actors of a provided movieId by using the GetMovie_actor function
+func (r *MovieRepository) GetActorsForMovie(MovieId int) ([]string, error) {
+	movieActors := []string{}
+	actorRepo := NewActorRepository(r.DB)
+	actorsId, _ := r.GetMovie_actor(MovieId)
 
 	for _, actorid := range actorsId {
 		actor, err := actorRepo.FindById(actorid)
@@ -281,16 +299,9 @@ func (r *MovieRepository) getInfo(MovieId int) ([]string, []string) {
 		}
 		movieActors = append(movieActors, actor.Name)
 	}
-	for _, genreId := range genresId {
-		genre, err := genreRepo.GetGenreByID(genreId)
-		if err != nil {
-			continue
-		}
-		movieGenres = append(movieGenres, genre.Name)
-	}
-	return movieActors, movieGenres
-}
 
+	return movieActors, nil
+}
 func formatDurations(duration uint16) string {
 	return ""
 }
