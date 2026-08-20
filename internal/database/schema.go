@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -18,7 +19,8 @@ var scheme = `
 	Overview 			TEXT,
 	OriginalLanguage 	TEXT,
 	created_at 			DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at 			DATETIME DEFAULT CURRENT_TIMESTAMP
+    updated_at 			DATETIME DEFAULT CURRENT_TIMESTAMP,
+	UNIQUE(title,releaseYear,duration)
 	);
 
 	CREATE TABLE IF NOT EXISTS ACTORS(
@@ -84,6 +86,7 @@ func tableExist(db *sql.DB) bool {
 }
 
 func seedData(db *sql.DB) error {
+	cx := context.Background()
 
 	var actors []*models.Actor
 	var genres []*models.Genre
@@ -128,7 +131,7 @@ func seedData(db *sql.DB) error {
 		return fmt.Errorf("failed to unmarshal movie seed data: %w", err)
 	}
 	for _, movie := range movies {
-		if _, err := mr.Post(movie); err != nil {
+		if _, err := mr.Post(cx, movie); err != nil {
 			return fmt.Errorf("failed to seed movie %q: %w", movie.Title, err)
 		}
 	}
