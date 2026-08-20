@@ -2,8 +2,9 @@ package repository
 
 import (
 	"database/sql"
-	"movies-api/internal/errors"
+	"fmt"
 	"movies-api/internal/models"
+	"movies-api/internal/errors"
 	"strings"
 	"time"
 )
@@ -152,8 +153,38 @@ func (r *ActorsRepository) GetAllActors(page, limit int) ([]models.Actor, int, e
 	return actors, total, err
 }
 
-func (r *ActorsRepository) DeleteActorsById(id int) error {
-	query := `DELETE FROM actors WHERE id = ?`
+func (r *ActorsRepository) DeleteActorsById(id int, force bool) error {
+	// checking if the actor exists
+	var name string
+	err := r.db.QueryRow(
+		"SELECT name FROM actors WHERE id = ?", id,
+	).Scan(&name)
+	if err != nil {
+		return errors.ErrNotFound
+	}
+	// checking if the actor is related to any movies
+	var count int
+	err = r.db.QueryRow(
+		"SELECT COUNT(*) FROM movie_actors WHERE actor_id = ?", id,
+	).Scan(&count)
+
+	if err != nil {
+		return err
+	}
+	// if force deletion isn't requested and actor has relation to movies
+	if count > 0 && !force {
+		return fmt.Errorf("can't delete actor %s, because it has %d related movies", name, count)
+	}
+	// removing the relation first
+	if force {
+		_, err := r.db.Exec(`DELETE FROM movie_actors WHERE actor_id = ?`, id)
+		if err != nil {
+			return err
+		}
+	}
+	// delete the actor
+	query := `
+	DELETE FROM actors WHERE id = ?`
 
 	result, err := r.db.Exec(query, id)
 	if err != nil {
@@ -169,19 +200,49 @@ func (r *ActorsRepository) DeleteActorsById(id int) error {
 	return nil
 }
 
-func (r *ActorsRepository) DeleteActorsByName(name string) error {
-	query := `DELETE FROM actors WHERE name = ?`
-
-	result, err := r.db.Exec(query, name)
+// not needed because if we have multiple actors with the same name, it doesn't know which one to delete
+func (r *ActorsRepository) DeleteActorsByName(name string, force bool) error {
+	// checking if the actor exists by exracting the name using Id
+	var id int
+	err := r.db.QueryRow(
+		"SELECT id FROM actors WHERE name = ?", name,
+	).Scan(&id)
 	if err != nil {
-		return err
-	}
-	rowsDeleted, err := result.RowsAffected()
-	if err != nil {
-		return err
-	}
-	if rowsDeleted == 0 {
 		return errors.ErrNotFound
 	}
-	return nil
+	// checking if the actor is related to any movies
+	var count int
+	err = r.db.QueryRow(
+		"SELECT COUNT(*) FROM movie_actors WHERE actor_id = ?", id,
+	).Scan(&count)
+
+	if err != nil {
+		return err
+	}
+	// if force deletion isn't requested and actor has relation to movies
+	if count > 0 && !force {
+		return fmt.Errorf("can't delete actor %s, because it has %d related movies", name, count)
+	}
+	// removing the relation first
+	if force {
+		_, err := r.db.Exec(`DELETE FROM movie_actors WHERE actor_id = ?`, id)
+		if err != nil {
+			return err
+		}
+	}
+	// delete the actor
+	query := `DELETE FROM actors WHERE id = ?`
+
+	_, err = r.db.Exec(query, id)
+	// if err != nil {
+	// 	return err
+	// }
+	// rowsDeleted, err := result.RowsAffected()
+	// if err != nil {
+	// 	return err
+	// }
+	// if rowsDeleted == 0 {
+	// 	return ErrNotFound
+	// }
+	return err
 }
