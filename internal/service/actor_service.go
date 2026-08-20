@@ -3,6 +3,8 @@ package service
 import (
 	"movies-api/internal/models"
 	"movies-api/internal/repository"
+	"movies-api/internal/errors"
+
 	"time"
 )
 
@@ -18,11 +20,11 @@ func NewActorService(repo *repository.ActorsRepository) *ActorService {
 
 func (s *ActorService) CreateActor(actor *models.Actor) error {
 	if actor.Name == "" || actor.BirthDate == "" {
-		return repository.ErrInvalidInput
+		return errors.ErrInvalidInput
 	}
 	_, err := time.Parse("2006-01-02", actor.BirthDate)
 	if err != nil {
-		return repository.ErrInvalidInput
+		return errors.ErrInvalidInput
 	}
 	return s.repo.CreateActor(actor)
 
@@ -30,11 +32,11 @@ func (s *ActorService) CreateActor(actor *models.Actor) error {
 
 func (s *ActorService) UpdateActor(actor *models.Actor) error {
 	if actor.Name == "" || actor.BirthDate == "" {
-		return repository.ErrInvalidInput
+		return errors.ErrInvalidInput
 	}
 	_, err := time.Parse("2006-01-02", actor.BirthDate)
 	if err != nil {
-		return repository.ErrInvalidInput
+		return errors.ErrInvalidInput
 	}
 	return s.repo.Update(actor)
 }
@@ -44,7 +46,7 @@ func (s *ActorService) FindById(id int) (*models.Actor, error) {
 }
 func (s *ActorService) FindByName(name string) (*models.Actor, error) {
 	if name == "" {
-		return nil, repository.ErrInvalidInput
+		return nil, errors.ErrInvalidInput
 	}
 	return s.repo.FindByName(name)
 }
@@ -57,7 +59,7 @@ func (s *ActorService) DeleteActorsById(id int) error {
 }
 func (s *ActorService) DeleteActorsByName(name string) error {
 	if name == "" {
-		return repository.ErrInvalidInput
+		return errors.ErrInvalidInput
 	}
 	return s.repo.DeleteActorsByName(name)
 }

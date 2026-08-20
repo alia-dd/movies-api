@@ -2,16 +2,10 @@ package repository
 
 import (
 	"database/sql"
-	"errors"
+	"movies-api/internal/errors"
 	"movies-api/internal/models"
 	"strings"
 	"time"
-)
-
-var (
-	ErrNotFound     = errors.New("record Not Found")
-	ErrDuplicateKey = errors.New("duplicate key violaion")
-	ErrInvalidInput = errors.New("Invalid Input")
 )
 
 type ActorsRepository struct {
@@ -34,11 +28,8 @@ func (r *ActorsRepository) CreateActor(actor *models.Actor) error {
 	now := time.Now()
 	result, err := r.db.Exec(query, actor.Name, actor.BirthDate)
 	if err != nil {
-		if err != nil {
-			if strings.Contains(err.Error(), "UNIQUE constraint failed") {
-				return ErrDuplicateKey
-			}
-			return err
+		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
+			return errors.ErrDuplicateKey
 		}
 		return err
 	}
@@ -68,7 +59,7 @@ func (r *ActorsRepository) Update(actor *models.Actor) error {
 		return err
 	}
 	if rowsAffected == 0 {
-		return ErrNotFound
+		return errors.ErrNotFound
 	}
 	actor.UpdatedAt = now
 	return nil
@@ -85,8 +76,8 @@ func (r *ActorsRepository) FindById(id int) (*models.Actor, error) {
 		&actor.BirthDate,
 	)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, ErrNotFound
+		if err == sql.ErrNoRows {
+			return nil, errors.ErrNotFound
 		}
 		return nil, err
 	}
@@ -104,8 +95,8 @@ func (r *ActorsRepository) FindByName(name string) (*models.Actor, error) {
 		&actor.BirthDate,
 	)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, ErrNotFound
+		if err == sql.ErrNoRows {
+			return nil, errors.ErrNotFound
 		}
 		return nil, err
 	}
@@ -149,7 +140,7 @@ func (r *ActorsRepository) DeleteActorsById(id int) error {
 		return err
 	}
 	if rowsDeleted == 0 {
-		return ErrNotFound
+		return errors.ErrNotFound
 	}
 	return nil
 }
@@ -167,7 +158,7 @@ func (r *ActorsRepository) DeleteActorsByName(name string) error {
 		return err
 	}
 	if rowsDeleted == 0 {
-		return ErrNotFound
+		return errors.ErrNotFound
 	}
 	return nil
 }
