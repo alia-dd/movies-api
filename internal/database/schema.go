@@ -127,7 +127,7 @@ func seedData(db *sql.DB) error {
 		return fmt.Errorf("failed to unmarshal movie seed data: %w", err)
 	}
 	for _, movie := range movies {
-		if _, err := mr.Post(movie); err != nil {
+		if _, err := mr.Post(nil, movie); err != nil {
 			return fmt.Errorf("failed to seed movie %q: %w", movie.Title, err)
 		}
 	}

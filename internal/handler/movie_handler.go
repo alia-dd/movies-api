@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"movies-api/internal/errors"
 	"movies-api/internal/models"
 	"movies-api/internal/service"
 	"net/http"
@@ -118,7 +119,7 @@ func (h *Handler) UpdateMovie(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		http.Error(w, idErr.Error(), http.StatusBadRequest)
+		http.Error(w, errors.ErrInvalidInput.Error(), http.StatusBadRequest)
 		w.Write(jsonData)
 		return
 	}
@@ -126,7 +127,7 @@ func (h *Handler) UpdateMovie(w http.ResponseWriter, r *http.Request) {
 	jsonErr := json.NewDecoder(r.Body).Decode(&movie)
 	if jsonErr != nil {
 		fmt.Println(jsonErr)
-		http.Error(w, jsonErr.Error(), http.StatusBadRequest)
+		http.Error(w, errors.ErrInvalidInput.Error(), http.StatusBadRequest)
 		return
 	}
 
