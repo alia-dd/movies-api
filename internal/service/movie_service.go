@@ -23,14 +23,12 @@ func (s *MovieService) GetMovie(cx context.Context, f models.Filter) ([]models.M
 	if f.Page != "" {
 		page, err := strconv.Atoi(f.Page)
 		if err != nil || page <= 0 {
-			log.Printf("Invalid page number")
 			f.Page = ""
 		}
 	}
 	if f.Size != "" {
 		size, err := strconv.Atoi(f.Size)
 		if err != nil || size <= 0 {
-			log.Printf("Invalid size number")
 			f.Size = ""
 		}
 	}
@@ -87,7 +85,7 @@ func (s *MovieService) UpdateMovie(cx context.Context, id int, m models.MovieUpd
 func (s *MovieService) DeleteMovie(cx context.Context, id string, force string) error {
 	forcebool, forceErr := strconv.ParseBool(force)
 	if forceErr != nil {
-		return fmt.Errorf("force must be a boolean %w", forceErr)
+		return errors.ErrorInvalidForceType
 	}
 	var sentencederr error
 	mId, idErr := strconv.Atoi(id)

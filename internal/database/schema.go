@@ -64,12 +64,9 @@ func InitializeMovieTable(db *sql.DB) error {
 	if tableExist(db) {
 		return nil
 	}
+
 	if _, err := db.Exec(scheme); err != nil {
 		return fmt.Errorf("failed to create MOVIES table: %w", err)
-	}
-
-	if err := seedData(db); err != nil {
-		return fmt.Errorf("failed to seed movie data: %w", err)
 	}
 
 	return nil
@@ -84,7 +81,7 @@ func tableExist(db *sql.DB) bool {
 	return true
 }
 
-func seedData(db *sql.DB) error {
+func SeedData(db *sql.DB) error {
 	cx := context.Background()
 
 	var actors []*models.Actor
