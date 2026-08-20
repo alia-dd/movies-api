@@ -1,7 +1,10 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"movies-api/internal/database"
+	"movies-api/internal/errors"
 	"movies-api/internal/handler"
 	"movies-api/internal/repository"
 	"movies-api/internal/service"
@@ -14,6 +17,8 @@ type dbData struct {
 }
 
 func route() (http.Handler, error) {
+	seed := flag.Bool("s", false, "Use flag -s to Seed the Database.")
+	flag.Parse()
 	mux := http.NewServeMux()
 
 	db, dbErr := database.InitializeDB("internal/database/data/moviesApi.db")
@@ -26,58 +31,61 @@ func route() (http.Handler, error) {
 		return nil, movieTableErr
 	}
 
+	if *seed {
+		if err := database.SeedData(db); err != nil {
+			return nil, fmt.Errorf("failed to seed movie data: %w", err)
+		}
+	}
+
 	//actor routes
 	repo := repository.NewActorRepository(db)
 	actorService := service.NewActorService(repo)
 	actorHandler := handler.NewActorHandler(actorService)
 
-	mux.HandleFunc("POST /api/actors", actorHandler.CreateActor)
-	mux.HandleFunc("PUT /api/actors/{id}", actorHandler.UpdateActor)
-	mux.HandleFunc("GET /api/actors", actorHandler.GetAllActors)
-	mux.HandleFunc("GET /api/actors/{id}", actorHandler.GetActorsById)
-	mux.HandleFunc("GET /api/actors/name/{name}", actorHandler.GetActorByName)
-	mux.HandleFunc("DELETE /api/actors/{id}", actorHandler.DeleteActorsById)
-	mux.HandleFunc("DELETE /api/actors/name/{name}", actorHandler.DeleteActorsByName)
+	mux.HandleFunc("POST /api/actors", Middleware(actorHandler.CreateActor))
+	mux.HandleFunc("PUT /api/actors/{id}", Middleware(actorHandler.UpdateActor))
+	mux.HandleFunc("GET /api/actors", Middleware(actorHandler.GetAllActors))
+	mux.HandleFunc("GET /api/actors/{id}", Middleware(actorHandler.GetActorsById))
+	mux.HandleFunc("GET /api/actors/name/{name}", Middleware(actorHandler.GetActorByName))
+	mux.HandleFunc("DELETE /api/actors/{id}", Middleware(actorHandler.DeleteActorsById))
+	mux.HandleFunc("DELETE /api/actors/name/{name}", Middleware(actorHandler.DeleteActorsByName))
 
 	movieRepo := repository.NewMovieRepository(db)
 	movieService := service.NewMovieService(movieRepo)
 	movieHandler := handler.NewMovieHandler(movieService)
 
 	// Movie routes
-	mux.HandleFunc("POST /api/movies", movieHandler.CreateMovie)
-	mux.HandleFunc("GET /api/movies", movieHandler.GetAllMovies)
-	mux.HandleFunc("GET /api/movies/{id}", movieHandler.GetMoviesById)
-	mux.HandleFunc("PATCH /api/movies/{id}", movieHandler.UpdateMovie)
-	mux.HandleFunc("DELETE /api/movies/{id}", movieHandler.DeleteMovie)
-	mux.HandleFunc("GET /api/movies/{movieId}/actors", movieHandler.GetActorsForMovie) // get all actor in selected movie
-	mux.HandleFunc("GET /api/movies/{movieId}/genres", movieHandler.GetGenresForMovie) // get all actor in selected movie
+	mux.HandleFunc("POST /api/movies", Middleware(movieHandler.CreateMovie))
+	mux.HandleFunc("GET /api/movies", Middleware(movieHandler.GetAllMovies))
+	mux.HandleFunc("GET /api/movies/{id}", Middleware(movieHandler.GetMoviesById))
+	mux.HandleFunc("PATCH /api/movies/{id}", Middleware(movieHandler.UpdateMovie))
+	mux.HandleFunc("DELETE /api/movies/{id}", Middleware(movieHandler.DeleteMovie))
+	mux.HandleFunc("GET /api/movies/{movieId}/actors", Middleware(movieHandler.GetActorsForMovie)) // get all actor in selected movie
+	mux.HandleFunc("GET /api/movies/{movieId}/genres", Middleware(movieHandler.GetGenresForMovie)) // get all actor in selected movie
 
 	// Genre routes
 	genreRepo := repository.NewGenreRepository(db)
 	genreService := service.NewGenreService(genreRepo)
 	genreHandler := handler.NewGenreHandler(genreService)
 
-	mux.HandleFunc("POST /api/genres", genreHandler.CreateGenre)
-	mux.HandleFunc("GET /api/genres", genreHandler.GetAllGenres)
-	mux.HandleFunc("GET /api/genres/search", genreHandler.SearchGenreByName)
-	mux.HandleFunc("GET /api/genres/{id}", genreHandler.GetGenreByID)
-	mux.HandleFunc("PATCH /api/genres/{id}", genreHandler.UpdateGenre)
-	mux.HandleFunc("DELETE /api/genres/{id}", genreHandler.DeleteGenreByID)
-	mux.HandleFunc("DELETE /api/genres/name/{name}", genreHandler.DeleteGenreByName)
+	mux.HandleFunc("POST /api/genres", Middleware(genreHandler.CreateGenre))
+	mux.HandleFunc("GET /api/genres", Middleware(genreHandler.GetAllGenres))
+	mux.HandleFunc("GET /api/genres/search", Middleware(genreHandler.SearchGenreByName))
+	mux.HandleFunc("GET /api/genres/{id}", Middleware(genreHandler.GetGenreByID))
+	mux.HandleFunc("PATCH /api/genres/{id}", Middleware(genreHandler.UpdateGenre))
+	mux.HandleFunc("DELETE /api/genres/{id}", Middleware(genreHandler.DeleteGenreByID))
+	mux.HandleFunc("DELETE /api/genres/name/{name}", Middleware(genreHandler.DeleteGenreByName))
 	return mux, nil
 }
 
-// Set up the following endpoints for each entity:
-
-// POST /api/{entity}: Create a new entity
-// GET /api/{entity}: Retrieve all entities
-// GET /api/{entity}/{id}: Retrieve a specific entity by ID
-// PATCH /api/{entity}/{id}: Partially update an existing entity
-// DELETE /api/{entity}/{id}: Delete an entity
-// Additionally, implement filtering endpoints for the following:
-
-// GET /api/movies?genre={genreId}: Retrieve movies filtered by genre
-// GET /api/movies?year={releaseYear}: Retrieve movies filtered by release year
-// GET /api/movies?actor={actorId}: Retrieve movies that the actor with the given id has starred in
-// GET /api/movies/{movieId}/actors: Retrieve all actors starring in a movie
-// GET /api/actors?name={name}:
+func Middleware(handler http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			err := recover()
+			if err != nil {
+				http.Error(w, errors.ErrServerErr.Error(), http.StatusInternalServerError)
+			}
+		}()
+		handler(w, r)
+	}
+}
