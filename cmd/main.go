@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	port := ":8000"
+	port := ":8800"
 	// database.FetchSeedData()
 	srv, err := route()
 	if err != nil {
