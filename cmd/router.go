@@ -32,7 +32,7 @@ func route() (http.Handler, error) {
 	actorHandler := handler.NewActorHandler(actorService)
 
 	mux.HandleFunc("POST /api/actors", actorHandler.CreateActor)
-	mux.HandleFunc("PUT /api/actors/{id}", actorHandler.UpdateActor)
+	mux.HandleFunc("PATCH /api/actors/{id}", actorHandler.UpdateActor)
 	mux.HandleFunc("GET /api/actors", actorHandler.GetAllActors)
 	mux.HandleFunc("GET /api/actors/{id}", actorHandler.GetActorsById)
 	mux.HandleFunc("GET /api/actors/name/{name}", actorHandler.GetActorByName)
