@@ -38,7 +38,6 @@ func route() (http.Handler, error) {
 	mux.HandleFunc("GET /api/actors/name/{name}", actorHandler.GetActorByName)
 	mux.HandleFunc("DELETE /api/actors/{id}", actorHandler.DeleteActorsById)
 	mux.HandleFunc("DELETE /api/actors/name/{name}", actorHandler.DeleteActorsByName)
-	mux.HandleFunc("DELETE /api/actors/search", actorHandler.SearchActorByName)
 
 	movieRepo := repository.NewMovieRepository(db)
 	movieService := service.NewMovieService(movieRepo)
