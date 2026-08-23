@@ -3,8 +3,8 @@ package repository
 import (
 	"database/sql"
 	"fmt"
-	"movies-api/internal/models"
 	"movies-api/internal/errors"
+	"movies-api/internal/models"
 	"strings"
 	"time"
 )
@@ -205,7 +205,7 @@ func (r *ActorsRepository) DeleteActorsByName(name string, force bool) error {
 	// delete the actor
 	query := `DELETE FROM actors WHERE id = ?`
 
-	_, err = r.db.Exec(query, id)
+	result, err := r.db.Exec(query, id)
 	if err != nil {
 		return err
 	}
