@@ -23,13 +23,13 @@ func (s *MovieService) GetMovie(cx context.Context, f models.Filter) ([]models.M
 	if f.Page != "" {
 		page, err := strconv.Atoi(f.Page)
 		if err != nil || page <= 0 {
-			f.Page = ""
+			return nil, errors.ErrInvalidInput
 		}
 	}
 	if f.Size != "" {
 		size, err := strconv.Atoi(f.Size)
 		if err != nil || size <= 0 {
-			f.Size = ""
+			return nil, errors.ErrInvalidInput
 		}
 	}
 	payload, err := s.repo.Get(cx, &f)
@@ -50,10 +50,16 @@ func (s *MovieService) SearchMovieByTitle(cx context.Context, title string) ([]m
 }
 
 func (s *MovieService) GetActorsForMovie(cx context.Context, id int) ([]string, error) {
+	if _, err := s.repo.GetById(cx, id); err != nil {
+		return nil, err
+	}
 	payload, err := s.repo.GetActorsForMovie(cx, id)
 	return payload, err
 }
 func (s *MovieService) GetGenresForMovie(cx context.Context, id int) ([]string, error) {
+	if _, err := s.repo.GetById(cx, id); err != nil {
+		return nil, err
+	}
 	payload, err := s.repo.GetGenresForMovie(cx, id)
 	return payload, err
 }
@@ -87,15 +93,13 @@ func (s *MovieService) DeleteMovie(cx context.Context, id string, force string) 
 	if forceErr != nil {
 		return errors.ErrorInvalidForceType
 	}
-	var sentencederr error
 	mId, idErr := strconv.Atoi(id)
 	if idErr != nil {
-		var sentencedMovie *models.MoviesDisplay
-		sentencedMovie, sentencederr = s.GetMovieByTitle(cx, id)
+		sentencedMovie, sentencederr := s.GetMovieByTitle(cx, id)
+		if sentencederr != nil {
+			return sentencederr
+		}
 		mId = sentencedMovie.Id
-	}
-	if sentencederr != nil {
-		return sentencederr
 	}
 
 	_, gCount := s.repo.GetMovie_genre(cx, mId)

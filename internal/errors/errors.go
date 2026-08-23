@@ -10,6 +10,7 @@ var (
 	ErrorInvalidForceType = errors.New("Force Must Be a Boolean")
 	ErrorMarshel          = errors.New("Failed To Marshel Data")
 	ErrUnmarshel          = errors.New("Failed To Unmarshel")
-	ErrTransaction        = errors.New("Failed To Begin Transaction")
+	ErrTransactionStart   = errors.New("Failed To Begin Transaction")
+	ErrTransactionCommit  = errors.New("Failed To Commit Transaction")
 	ErrServerErr          = errors.New("Internal Server Error")
 )

@@ -191,7 +191,7 @@ func (r *MovieRepository) SearchByTitle(cx context.Context, title string) ([]mod
 func (r *MovieRepository) Post(cx context.Context, m models.Movies) (int64, error) {
 	tx, txErr := r.DB.BeginTx(cx, nil)
 	if txErr != nil {
-		return 0, errors.ErrTransaction
+		return 0, errors.ErrTransactionStart
 	}
 
 	defer tx.Rollback() // if there is error revert changes to the db back to before the changes
@@ -220,14 +220,16 @@ func (r *MovieRepository) Post(cx context.Context, m models.Movies) (int64, erro
 			return 0, fmt.Errorf("failed to link actor %d to MOVIES %q: %w", actorID, m.Title, maErr)
 		}
 	}
-	tx.Commit()
+	if err := tx.Commit(); err != nil {
+		return 0, errors.ErrTransactionCommit
+	}
 	return movieID, nil
 }
 
 func (r *MovieRepository) Patch(cx context.Context, id int, m models.MovieUpdate) error {
 	tx, txErr := r.DB.BeginTx(cx, nil)
 	if txErr != nil {
-		return fmt.Errorf("Failed to begin transaction: %w", txErr)
+		return errors.ErrTransactionStart
 	}
 
 	now := time.Now()
@@ -306,31 +308,47 @@ func (r *MovieRepository) Patch(cx context.Context, id int, m models.MovieUpdate
 }
 
 func (r *MovieRepository) Delete(cx context.Context, MovieId int, force bool) (int64, error) {
+	var genresId, actorsId []int
+	var movieTitle string
+
 	if force {
 		m, payloadErr := r.GetById(cx, MovieId)
 		if payloadErr != nil {
 
 			return 0, payloadErr
 		}
+		movieTitle = m.Title
+		genresId, _ = r.GetMovie_genre(cx, MovieId)
+		actorsId, _ = r.GetMovie_actor(cx, MovieId)
+	}
+	tx, txErr := r.DB.BeginTx(cx, nil)
+	if txErr != nil {
+		return 0, errors.ErrTransactionStart
+	}
+	defer tx.Rollback()
 
-		genresId, _ := r.GetMovie_genre(cx, MovieId)
+	if force {
 		for _, genreID := range genresId {
-			if _, mgErr := r.DB.ExecContext(cx, deleteMovieGenreConnectionQuery, MovieId, genreID); mgErr != nil {
-				return 0, fmt.Errorf("failed to remove the link bw genre %d and MOVIES %s: %w", genreID, m.Title, mgErr)
+			if _, mgErr := tx.ExecContext(cx, deleteMovieGenreConnectionQuery, MovieId, genreID); mgErr != nil {
+				return 0, fmt.Errorf("failed to remove the link bw genre %d and MOVIES %s: %w", genreID, movieTitle, mgErr)
 			}
 		}
-		actorsId, _ := r.GetMovie_actor(cx, MovieId)
+
 		for _, actorID := range actorsId {
-			if _, maErr := r.DB.ExecContext(cx, deleteMovieActorConnectionQuery, MovieId, actorID); maErr != nil {
-				return 0, fmt.Errorf("failed to remove the link bw genre %d and MOVIES %s: %w", actorID, m.Title, maErr)
+			if _, maErr := tx.ExecContext(cx, deleteMovieActorConnectionQuery, MovieId, actorID); maErr != nil {
+				return 0, fmt.Errorf("failed to remove the link bw actor %d and MOVIES %s: %w", actorID, movieTitle, maErr)
 			}
 		}
 	}
-	rows, deleteErr := r.DB.ExecContext(cx, deleteMovieQuery, MovieId)
+	rows, deleteErr := tx.ExecContext(cx, deleteMovieQuery, MovieId)
 	if deleteErr != nil {
 		return 0, deleteErr
 	}
 	affectedR, _ := rows.RowsAffected()
+
+	if err := tx.Commit(); err != nil {
+		return 0, errors.ErrTransactionCommit
+	}
 	return affectedR, nil
 }
 

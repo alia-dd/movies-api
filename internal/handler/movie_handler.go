@@ -163,14 +163,7 @@ func (h *Handler) DeleteMovie(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, deleteErr.Error(), http.StatusBadRequest)
 		return
 	}
-	jsonData, err := json.Marshal([]string{"message: ", "movie deleted"})
-	if err != nil {
-		http.Error(w, errors.ErrorMarshel.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusNoContent)
-	w.Write(jsonData)
 }
 
 func (h *Handler) GetGenresForMovie(w http.ResponseWriter, r *http.Request) {
