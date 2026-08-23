@@ -37,6 +37,7 @@ func (h *Handler) GetAllMovies(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
 	page, _ := strconv.Atoi(f.Page)
 	size, err := strconv.Atoi(f.Size)
 	jsonData, err := json.MarshalIndent(map[string]interface{}{
@@ -46,7 +47,8 @@ func (h *Handler) GetAllMovies(w http.ResponseWriter, r *http.Request) {
 			"total":       total,
 			"total_pages": (total + size - 1) / size,
 		},
-		"data": payload}, "", "  ")
+		"data": payload}, "", "  ",
+	)
 	if err != nil {
 		http.Error(w, errors.ErrorMarshel.Error(), http.StatusInternalServerError)
 		return
@@ -62,6 +64,7 @@ func (h *Handler) GetMoviesById(w http.ResponseWriter, r *http.Request) {
 	var payload *models.MoviesDisplay
 	var byTitlePayload []models.MoviesDisplay
 	var err error
+
 	id, idErr := strconv.Atoi(r.PathValue("id"))
 	if idErr != nil {
 		byTitlePayload, err = h.service.SearchMovieByTitle(cx, r.PathValue("id"))
@@ -76,6 +79,7 @@ func (h *Handler) GetMoviesById(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
 	var jsonData []byte
 	var jsonErr error
 	if byTitlePayload != nil {
@@ -87,6 +91,7 @@ func (h *Handler) GetMoviesById(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, errors.ErrorMarshel.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonData)
@@ -95,6 +100,7 @@ func (h *Handler) GetMoviesById(w http.ResponseWriter, r *http.Request) {
 // add new movie to the db
 func (h *Handler) CreateMovie(w http.ResponseWriter, r *http.Request) {
 	cx := r.Context()
+
 	var movie models.Movies
 	jsonErr := json.NewDecoder(r.Body).Decode(&movie)
 	if jsonErr != nil {
@@ -117,6 +123,7 @@ func (h *Handler) CreateMovie(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, errors.ErrorMarshel.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Write(jsonData)
@@ -130,6 +137,7 @@ func (h *Handler) UpdateMovie(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, errors.ErrInvalidId.Error(), http.StatusBadRequest)
 		return
 	}
+
 	var movie models.MovieUpdate
 	jsonErr := json.NewDecoder(r.Body).Decode(&movie)
 	if jsonErr != nil {
@@ -152,6 +160,7 @@ func (h *Handler) UpdateMovie(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, errors.ErrorMarshel.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonData)
@@ -160,6 +169,7 @@ func (h *Handler) UpdateMovie(w http.ResponseWriter, r *http.Request) {
 // delete the movie with given id
 func (h *Handler) DeleteMovie(w http.ResponseWriter, r *http.Request) {
 	cx := r.Context()
+
 	val := r.URL.Query().Get("force")
 	if val == "" {
 		val = "false"
@@ -173,6 +183,7 @@ func (h *Handler) DeleteMovie(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, deleteErr.Error(), http.StatusBadRequest)
 		return
 	}
+
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -180,6 +191,7 @@ func (h *Handler) GetGenresForMovie(w http.ResponseWriter, r *http.Request) {
 	cx := r.Context()
 	var payload []string
 	var err error
+
 	id, idErr := strconv.Atoi(r.PathValue("movieId"))
 	if idErr != nil {
 		movie, movieErr := h.service.GetMovieByTitle(cx, r.PathValue("movieId"))
@@ -193,8 +205,8 @@ func (h *Handler) GetGenresForMovie(w http.ResponseWriter, r *http.Request) {
 		}
 		id = movie.Id
 	}
-	payload, err = h.service.GetGenresForMovie(cx, id)
 
+	payload, err = h.service.GetGenresForMovie(cx, id)
 	if err == sql.ErrNoRows {
 		http.Error(w, errors.ErrNotFound.Error(), http.StatusNotFound)
 		return
@@ -204,11 +216,11 @@ func (h *Handler) GetGenresForMovie(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jsonData, jsonErr := json.MarshalIndent(map[string]interface{}{"data": payload}, "", "  ")
-
 	if jsonErr != nil {
 		http.Error(w, errors.ErrorMarshel.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonData)
@@ -218,6 +230,7 @@ func (h *Handler) GetActorsForMovie(w http.ResponseWriter, r *http.Request) {
 	cx := r.Context()
 	var payload []string
 	var err error
+
 	id, idErr := strconv.Atoi(r.PathValue("movieId"))
 	if idErr != nil {
 		movie, movieErr := h.service.GetMovieByTitle(cx, r.PathValue("movieId"))
@@ -232,8 +245,8 @@ func (h *Handler) GetActorsForMovie(w http.ResponseWriter, r *http.Request) {
 		}
 		id = movie.Id
 	}
-	payload, err = h.service.GetActorsForMovie(cx, id)
 
+	payload, err = h.service.GetActorsForMovie(cx, id)
 	if err == sql.ErrNoRows {
 		http.Error(w, errors.ErrNotFound.Error(), http.StatusNotFound)
 		return
@@ -243,11 +256,11 @@ func (h *Handler) GetActorsForMovie(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jsonData, jsonErr := json.MarshalIndent(map[string]interface{}{"data": payload}, "", "  ")
-
 	if jsonErr != nil {
 		http.Error(w, errors.ErrorMarshel.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonData)
