@@ -86,5 +86,6 @@ func Middleware(handler http.HandlerFunc) http.HandlerFunc {
 				http.Error(w, errors.ErrServerErr.Error(), http.StatusInternalServerError)
 			}
 		}()
+		handler(w, r)
 	}
 }
