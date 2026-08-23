@@ -30,6 +30,7 @@ var scheme = `
 	birthdate TEXT NOT NULL,
 	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 	updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	UNIQUE(name, birthdate)
 	);
 
 	CREATE TABLE IF NOT EXISTS GENRES(

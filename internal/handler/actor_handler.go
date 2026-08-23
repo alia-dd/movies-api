@@ -62,15 +62,45 @@ func (h *ActorHandler) UpdateActor(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ActorHandler) GetAllActors(w http.ResponseWriter, r *http.Request) {
+	pageStr := r.URL.Query().Get("page")
+	limitStr := r.URL.Query().Get("limit")
 
-	actors, err := h.service.GetAllActors()
+	if pageStr == "" {
+		pageStr = "1"
+	}
+	if limitStr == "" {
+		limitStr = "10"
+	}
+	page, err := strconv.Atoi(pageStr)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if page < 1 || limit < 1 {
+		http.Error(w, "page and limit must be greater than 0", http.StatusBadRequest)
+		return
+	}
+	actors, total, err := h.service.GetAllActors(page, limit)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(actors)
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": actors,
+		"pagination": map[string]int{
+			"page":        page,
+			"limit":       limit,
+			"total":       total,
+			"total_pages": (total/limit - 1) / limit,
+		},
+	})
 }
 
 func (h *ActorHandler) GetActorsById(w http.ResponseWriter, r *http.Request) {
@@ -115,8 +145,8 @@ func (h *ActorHandler) DeleteActorsById(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "Invalid actor id", http.StatusBadRequest)
 		return
 	}
-
-	err := h.service.DeleteActorsById(Id)
+	force := r.URL.Query().Get("force") == "true"
+	err := h.service.DeleteActorsById(Id, force)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -126,8 +156,8 @@ func (h *ActorHandler) DeleteActorsById(w http.ResponseWriter, r *http.Request) 
 func (h *ActorHandler) DeleteActorsByName(w http.ResponseWriter, r *http.Request) {
 
 	name := r.PathValue("name")
-
-	err := h.service.DeleteActorsByName(name)
+	force := r.URL.Query().Get("force") == "true"
+	err := h.service.DeleteActorsByName(name, force)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

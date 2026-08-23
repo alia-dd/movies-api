@@ -3,6 +3,7 @@ package service
 import (
 	"movies-api/internal/models"
 	"movies-api/internal/repository"
+	"movies-api/internal/errors"
 	"time"
 )
 
@@ -18,11 +19,11 @@ func NewActorService(repo *repository.ActorsRepository) *ActorService {
 
 func (s *ActorService) CreateActor(actor *models.Actor) error {
 	if actor.Name == "" || actor.BirthDate == "" {
-		return repository.ErrInvalidInput
+		return errors.ErrInvalidInput
 	}
 	_, err := time.Parse("2006-01-02", actor.BirthDate)
 	if err != nil {
-		return repository.ErrInvalidInput
+		return errors.ErrInvalidInput
 	}
 	return s.repo.CreateActor(actor)
 
@@ -30,34 +31,38 @@ func (s *ActorService) CreateActor(actor *models.Actor) error {
 
 func (s *ActorService) UpdateActor(actor *models.Actor) error {
 	if actor.Name == "" || actor.BirthDate == "" {
-		return repository.ErrInvalidInput
+		return errors.ErrInvalidInput
 	}
 	_, err := time.Parse("2006-01-02", actor.BirthDate)
 	if err != nil {
-		return repository.ErrInvalidInput
+		return errors.ErrInvalidInput
 	}
 	return s.repo.Update(actor)
 }
 
 func (s *ActorService) FindById(id int) (*models.Actor, error) {
+	if id <= 0 {
+		return nil, errors.ErrInvalidInput
+	}
 	return s.repo.FindById(id)
 }
 func (s *ActorService) FindByName(name string) (*models.Actor, error) {
 	if name == "" {
-		return nil, repository.ErrInvalidInput
+		return nil, errors.ErrInvalidInput
 	}
 	return s.repo.FindByName(name)
 }
 
-func (s *ActorService) GetAllActors() ([]models.Actor, error) {
-	return s.repo.GetAllActors()
+func (s *ActorService) GetAllActors(page, limit int) ([]models.Actor, int, error) {
+	return s.repo.GetAllActors(page, limit)
 }
-func (s *ActorService) DeleteActorsById(id int) error {
-	return s.repo.DeleteActorsById(id)
+
+func (s *ActorService) DeleteActorsById(id int, force bool) error {
+	return s.repo.DeleteActorsById(id, force)
 }
-func (s *ActorService) DeleteActorsByName(name string) error {
+func (s *ActorService) DeleteActorsByName(name string, force bool) error {
 	if name == "" {
-		return repository.ErrInvalidInput
+		return errors.ErrInvalidInput
 	}
-	return s.repo.DeleteActorsByName(name)
+	return s.repo.DeleteActorsByName(name, force)
 }

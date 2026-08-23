@@ -42,13 +42,13 @@ func route() (http.Handler, error) {
 	actorService := service.NewActorService(repo)
 	actorHandler := handler.NewActorHandler(actorService)
 
-	mux.HandleFunc("POST /api/actors", Middleware(actorHandler.CreateActor))
-	mux.HandleFunc("PUT /api/actors/{id}", Middleware(actorHandler.UpdateActor))
-	mux.HandleFunc("GET /api/actors", Middleware(actorHandler.GetAllActors))
-	mux.HandleFunc("GET /api/actors/{id}", Middleware(actorHandler.GetActorsById))
-	mux.HandleFunc("GET /api/actors/name/{name}", Middleware(actorHandler.GetActorByName))
-	mux.HandleFunc("DELETE /api/actors/{id}", Middleware(actorHandler.DeleteActorsById))
-	mux.HandleFunc("DELETE /api/actors/name/{name}", Middleware(actorHandler.DeleteActorsByName))
+	mux.HandleFunc("POST /api/actors", actorHandler.CreateActor)
+	mux.HandleFunc("PATCH /api/actors/{id}", actorHandler.UpdateActor)
+	mux.HandleFunc("GET /api/actors", actorHandler.GetAllActors)
+	mux.HandleFunc("GET /api/actors/{id}", actorHandler.GetActorsById)
+	mux.HandleFunc("GET /api/actors/name/{name}", actorHandler.GetActorByName)
+	mux.HandleFunc("DELETE /api/actors/{id}", actorHandler.DeleteActorsById)
+	mux.HandleFunc("DELETE /api/actors/name/{name}", actorHandler.DeleteActorsByName)
 
 	movieRepo := repository.NewMovieRepository(db)
 	movieService := service.NewMovieService(movieRepo)
@@ -86,6 +86,5 @@ func Middleware(handler http.HandlerFunc) http.HandlerFunc {
 				http.Error(w, errors.ErrServerErr.Error(), http.StatusInternalServerError)
 			}
 		}()
-		handler(w, r)
 	}
 }
