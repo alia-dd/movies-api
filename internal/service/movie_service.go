@@ -19,50 +19,45 @@ func NewMovieService(repo *repository.MovieRepository) *MovieService {
 	return &MovieService{repo: repo}
 }
 
-func (s *MovieService) GetMovie(cx context.Context, f models.Filter) ([]models.MoviesDisplay, error) {
+func (s *MovieService) GetMovie(cx context.Context, f models.Filter) ([]models.MoviesDisplay, int, error) {
 	if f.Page != "" {
 		page, err := strconv.Atoi(f.Page)
 		if err != nil || page <= 0 {
-			return nil, errors.ErrInvalidInput
+			return nil, 0, errors.ErrInvalidInput
 		}
 	}
 	if f.Size != "" {
 		size, err := strconv.Atoi(f.Size)
 		if err != nil || size <= 0 {
-			return nil, errors.ErrInvalidInput
+			return nil, 0, errors.ErrInvalidInput
 		}
 	}
-	payload, err := s.repo.Get(cx, &f)
-	return payload, err
+	return s.repo.Get(cx, &f)
 }
 
 func (s *MovieService) GetMovieById(cx context.Context, id int) (*models.MoviesDisplay, error) {
-	payload, err := s.repo.GetById(cx, id)
-	return payload, err
+	return s.repo.GetById(cx, id)
 }
 func (s *MovieService) GetMovieByTitle(cx context.Context, title string) (*models.MoviesDisplay, error) {
-	payload, err := s.repo.GetByTitle(cx, title)
-	return payload, err
+	return s.repo.GetByTitle(cx, title)
 }
 func (s *MovieService) SearchMovieByTitle(cx context.Context, title string) ([]models.MoviesDisplay, error) {
-	payload, err := s.repo.SearchByTitle(cx, title)
-	return payload, err
+	return s.repo.SearchByTitle(cx, title)
 }
 
 func (s *MovieService) GetActorsForMovie(cx context.Context, id int) ([]string, error) {
 	if _, err := s.repo.GetById(cx, id); err != nil {
 		return nil, err
 	}
-	payload, err := s.repo.GetActorsForMovie(cx, id)
-	return payload, err
+	return s.repo.GetActorsForMovie(cx, id)
 }
 func (s *MovieService) GetGenresForMovie(cx context.Context, id int) ([]string, error) {
 	if _, err := s.repo.GetById(cx, id); err != nil {
 		return nil, err
 	}
-	payload, err := s.repo.GetGenresForMovie(cx, id)
-	return payload, err
+	return s.repo.GetGenresForMovie(cx, id)
 }
+
 func (s *MovieService) CreateMovie(cx context.Context, movie models.Movies) (*models.MoviesDisplay, error) {
 	year, err := strconv.Atoi(movie.ReleaseYear)
 	if err != nil || movie.Title == "" || year < 1888 || year > time.Now().Year() {

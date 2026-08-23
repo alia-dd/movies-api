@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"movies-api/internal/errors"
 	"movies-api/internal/models"
 	"movies-api/internal/repository"
 	"os"
@@ -12,7 +13,7 @@ import (
 
 var scheme = `
 	CREATE TABLE IF NOT EXISTS MOVIES(
-	id 					INTEGER PRIMARY KEY AUTOINCREMENT,
+	id 					INTEGER PRIMARY KEY,
 	title       		TEXT NOT NULL,
 	releaseYear 		INTEGER NOT NULL,
 	duration    		INTEGER,
@@ -24,7 +25,7 @@ var scheme = `
 	);
 
 	CREATE TABLE IF NOT EXISTS ACTORS(
-	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	id INTEGER PRIMARY KEY,
 	name TEXT NOT NULL,
 	birthdate TEXT NOT NULL,
 	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -32,7 +33,7 @@ var scheme = `
 	);
 
 	CREATE TABLE IF NOT EXISTS GENRES(
-	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	id INTEGER PRIMARY KEY,
 	name TEXT NOT NULL UNIQUE,
 	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 	updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -91,6 +92,13 @@ func SeedData(db *sql.DB) error {
 	ar := repository.NewActorRepository(db)
 	gr := repository.NewGenreRepository(db)
 
+	// this func clears the movies/genres/actors tables for seeding process
+	if clearErr := clearTables(cx, db); clearErr != nil {
+		return clearErr
+	}
+
+	// get json data from the actor json file and unmarshell it into
+	// actor struct and then post it the the ACTORS table
 	actorBody, fileErr := os.ReadFile("internal/database/data/tmdb_actors.json")
 	if fileErr != nil {
 		return fileErr
@@ -98,13 +106,14 @@ func SeedData(db *sql.DB) error {
 	if err := json.Unmarshal(actorBody, &actors); err != nil {
 		return fmt.Errorf("failed to unmarshal actor seed data: %w", err)
 	}
-
 	for _, actor := range actors {
 		if err := ar.CreateActor(actor); err != nil {
 			return fmt.Errorf("failed to seed movie %q: %w", actor.Name, err)
 		}
 	}
 
+	// get json data from the genre json file and unmarshell it into
+	// genre struct and then post it the the GENRES table
 	genreBody, fileErr := os.ReadFile("internal/database/data/tmdb_genres.json")
 	if fileErr != nil {
 		return fileErr
@@ -112,13 +121,15 @@ func SeedData(db *sql.DB) error {
 	if err := json.Unmarshal(genreBody, &genres); err != nil {
 		return fmt.Errorf("failed to unmarshal genre seed data: %w", err)
 	}
-
 	for _, genre := range genres {
-		if err := gr.CreateGenre(genre); err != nil {
+		if err := gr.CreateGenre(cx, genre); err != nil {
 			return fmt.Errorf("failed to seed genre %q: %w", genre.Name, err)
 		}
 	}
 
+	// get json data from the movie json file and unmarshell it into
+	// movie struct and then post it the the movie table
+	// and create the actors/genre connection if there are any
 	movieBody, fileErr := os.ReadFile("internal/database/data/tmdb_movies.json")
 	if fileErr != nil {
 		return fileErr
@@ -131,5 +142,21 @@ func SeedData(db *sql.DB) error {
 			return fmt.Errorf("failed to seed movie %q: %w", movie.Title, err)
 		}
 	}
+
 	return nil
+}
+
+func clearTables(cx context.Context, db *sql.DB) error {
+	tx, txErr := db.BeginTx(cx, nil)
+	if txErr != nil {
+		return errors.ErrTransactionStart
+	}
+	defer tx.Rollback()
+	tables := []string{"movie_actor", "movie_genre", "MOVIES", "ACTORS", "GENRES"}
+	for _, table := range tables {
+		if _, tableErr := tx.ExecContext(cx, `DELETE FROM `+table); tableErr != nil {
+			return tableErr
+		}
+	}
+	return tx.Commit()
 }

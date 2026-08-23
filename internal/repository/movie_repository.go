@@ -42,7 +42,7 @@ func NewMovieRepository(db *sql.DB) *MovieRepository {
 	return &MovieRepository{DB: db}
 }
 
-func (r *MovieRepository) Get(cx context.Context, f *models.Filter) ([]models.MoviesDisplay, error) {
+func (r *MovieRepository) Get(cx context.Context, f *models.Filter) ([]models.MoviesDisplay, int, error) {
 
 	query := getAllSelectQuery
 	extraQuery := ``
@@ -87,7 +87,7 @@ func (r *MovieRepository) Get(cx context.Context, f *models.Filter) ([]models.Mo
 
 	rows, rowErr := r.DB.QueryContext(cx, query, arg...)
 	if rowErr != nil {
-		return nil, rowErr
+		return nil, 0, rowErr
 	}
 	defer rows.Close()
 
@@ -96,7 +96,7 @@ func (r *MovieRepository) Get(cx context.Context, f *models.Filter) ([]models.Mo
 		movie := models.Movies{}
 		err := rows.Scan(&movie.Id, &movie.Title, &movie.ReleaseYear, &movie.Duration, &movie.Overview, &movie.OriginalLanguage, &movie.CreatedAt, &movie.UpdatedAt)
 		if err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 
 		duration := formatDurations(movie.Duration)
@@ -112,7 +112,7 @@ func (r *MovieRepository) Get(cx context.Context, f *models.Filter) ([]models.Mo
 		})
 	}
 	if err := rows.Err(); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	for i := range movies {
@@ -122,7 +122,13 @@ func (r *MovieRepository) Get(cx context.Context, f *models.Filter) ([]models.Mo
 		movies[i].Genres = movieGenres
 	}
 
-	return movies, nil
+	total := 0
+	err := r.DB.QueryRowContext(cx, getAllSelectQuery).Scan(&total)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return movies, total, nil
 }
 
 func (r *MovieRepository) GetById(cx context.Context, id int) (*models.MoviesDisplay, error) {
@@ -402,7 +408,7 @@ func (r *MovieRepository) GetGenresForMovie(cx context.Context, MovieId int) ([]
 	genresId, _ := r.GetMovie_genre(cx, MovieId)
 
 	for _, genreId := range genresId {
-		genre, err := genreRepo.GetGenreByID(genreId)
+		genre, err := genreRepo.GetGenreByID(cx, genreId)
 		if err != nil {
 			continue
 		}

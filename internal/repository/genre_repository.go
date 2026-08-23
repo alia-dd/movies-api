@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"database/sql"
 	"movies-api/internal/errors"
 	"movies-api/internal/models"
@@ -17,9 +18,9 @@ func NewGenreRepository(db *sql.DB) *GenreRepository {
 	}
 }
 
-func (r *GenreRepository) CreateGenre(genre *models.Genre) error {
+func (r *GenreRepository) CreateGenre(cx context.Context, genre *models.Genre) error {
 	query := `INSERT INTO GENRES (name) VALUES(?)`
-	result, err := r.db.Exec(query, genre.Name)
+	result, err := r.db.ExecContext(cx, query, genre.Name)
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
 			return errors.ErrDuplicateKey
@@ -33,22 +34,22 @@ func (r *GenreRepository) CreateGenre(genre *models.Genre) error {
 	}
 	genre.Id = int(id)
 
-	err = r.db.QueryRow(`SELECT created_at, updated_at FROM GENRES WHERE id = ?`, id).
+	err = r.db.QueryRowContext(cx, `SELECT created_at, updated_at FROM GENRES WHERE id = ?`, id).
 		Scan(&genre.CreatedAt, &genre.UpdatedAt)
 	return err
 }
 
-func (r *GenreRepository) GetAllGenresWithPagination(page, limit int) ([]models.Genre, int, error) {
+func (r *GenreRepository) GetAllGenresWithPagination(cx context.Context, page, limit int) ([]models.Genre, int, error) {
 	countQuery := `SELECT COUNT(*) FROM GENRES`
 	var total int
-	err := r.db.QueryRow(countQuery).Scan(&total)
+	err := r.db.QueryRowContext(cx, countQuery).Scan(&total)
 	if err != nil {
 		return nil, 0, err
 	}
 
 	offset := (page - 1) * limit
 	query := `SELECT id, name, created_at, updated_at FROM GENRES LIMIT ? OFFSET ?`
-	rows, err := r.db.Query(query, limit, offset)
+	rows, err := r.db.QueryContext(cx, query, limit, offset)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -66,10 +67,10 @@ func (r *GenreRepository) GetAllGenresWithPagination(page, limit int) ([]models.
 	return genres, total, rows.Err()
 }
 
-func (r *GenreRepository) GetGenreByID(id int) (*models.Genre, error) {
+func (r *GenreRepository) GetGenreByID(cx context.Context, id int) (*models.Genre, error) {
 	query := `SELECT id, name, created_at, updated_at FROM GENRES WHERE id = ?`
 	var genre models.Genre
-	err := r.db.QueryRow(query, id).Scan(&genre.Id, &genre.Name, &genre.CreatedAt, &genre.UpdatedAt)
+	err := r.db.QueryRowContext(cx, query, id).Scan(&genre.Id, &genre.Name, &genre.CreatedAt, &genre.UpdatedAt)
 	if err == sql.ErrNoRows {
 		return nil, errors.ErrNotFound
 	}
@@ -79,27 +80,27 @@ func (r *GenreRepository) GetGenreByID(id int) (*models.Genre, error) {
 	return &genre, nil
 }
 
-func (r *GenreRepository) GetGenreByName(name string) (*models.Genre, error) {
+func (r *GenreRepository) GetGenreByName(cx context.Context, name string) (*models.Genre, error) {
 	query := `SELECT id, name, created_at, updated_at FROM GENRES WHERE name = ?`
 	var genre models.Genre
-	err := r.db.QueryRow(query, name).Scan(&genre.Id, &genre.Name, &genre.CreatedAt, &genre.UpdatedAt)
+	err := r.db.QueryRowContext(cx, query, name).Scan(&genre.Id, &genre.Name, &genre.CreatedAt, &genre.UpdatedAt)
 	if err == sql.ErrNoRows {
 		return nil, errors.ErrNotFound
 	}
 	return &genre, err
 }
 
-func (r *GenreRepository) SearchGenreByName(searchTerm string, page, limit int) ([]models.Genre, int, error) {
+func (r *GenreRepository) SearchGenreByName(cx context.Context, searchTerm string, page, limit int) ([]models.Genre, int, error) {
 	countQuery := `SELECT COUNT(*) FROM GENRES WHERE name LIKE ?`
 	var total int
-	err := r.db.QueryRow(countQuery, "%"+searchTerm+"%").Scan(&total)
+	err := r.db.QueryRowContext(cx, countQuery, "%"+searchTerm+"%").Scan(&total)
 	if err != nil {
 		return nil, 0, err
 	}
 
 	offset := (page - 1) * limit
 	query := `SELECT id, name, created_at, updated_at FROM GENRES WHERE name LIKE ? LIMIT ? OFFSET ?`
-	rows, err := r.db.Query(query, "%"+searchTerm+"%", limit, offset)
+	rows, err := r.db.QueryContext(cx, query, "%"+searchTerm+"%", limit, offset)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -117,16 +118,16 @@ func (r *GenreRepository) SearchGenreByName(searchTerm string, page, limit int) 
 	return genres, total, rows.Err()
 }
 
-func (r *GenreRepository) CountMoviesByGenre(genreId int) (int, error) {
+func (r *GenreRepository) CountMoviesByGenre(cx context.Context, genreId int) (int, error) {
 	query := `SELECT COUNT(*) FROM movie_genre WHERE genreId = ?`
 	var count int
-	err := r.db.QueryRow(query, genreId).Scan(&count)
+	err := r.db.QueryRowContext(cx, query, genreId).Scan(&count)
 	return count, err
 }
 
-func (r *GenreRepository) UpdateGenre(id int, name string) error {
+func (r *GenreRepository) UpdateGenre(cx context.Context, id int, name string) error {
 	query := `UPDATE GENRES SET name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
-	result, err := r.db.Exec(query, name, id)
+	result, err := r.db.ExecContext(cx, query, name, id)
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
 			return errors.ErrDuplicateKey
@@ -144,9 +145,9 @@ func (r *GenreRepository) UpdateGenre(id int, name string) error {
 	return nil
 }
 
-func (r *GenreRepository) DeleteGenre(id int) error {
+func (r *GenreRepository) DeleteGenre(cx context.Context, id int) error {
 	query := `DELETE FROM GENRES WHERE id = ?`
-	result, err := r.db.Exec(query, id)
+	result, err := r.db.ExecContext(cx, query, id)
 	if err != nil {
 		return err
 	}
@@ -160,15 +161,15 @@ func (r *GenreRepository) DeleteGenre(id int) error {
 	return nil
 }
 
-func (r *GenreRepository) DeleteGenreWithAssociations(id int) error {
+func (r *GenreRepository) DeleteGenreWithAssociations(cx context.Context, id int) error {
 	query1 := `DELETE FROM movie_genre WHERE genreId = ?`
-	_, err := r.db.Exec(query1, id)
+	_, err := r.db.ExecContext(cx, query1, id)
 	if err != nil {
 		return err
 	}
 
 	query2 := `DELETE FROM GENRES WHERE id = ?`
-	result, err := r.db.Exec(query2, id)
+	result, err := r.db.ExecContext(cx, query2, id)
 	if err != nil {
 		return err
 	}
@@ -183,9 +184,9 @@ func (r *GenreRepository) DeleteGenreWithAssociations(id int) error {
 	return nil
 }
 
-func (r *GenreRepository) DeleteGenreByName(name string) error {
+func (r *GenreRepository) DeleteGenreByName(cx context.Context, name string) error {
 	query := `DELETE FROM GENRES WHERE name = ?`
-	result, err := r.db.Exec(query, name)
+	result, err := r.db.ExecContext(cx, query, name)
 	if err != nil {
 		return err
 	}
@@ -199,9 +200,9 @@ func (r *GenreRepository) DeleteGenreByName(name string) error {
 	return nil
 }
 
-func (r *GenreRepository) DeleteGenreByNameWithAssociations(name string) error {
+func (r *GenreRepository) DeleteGenreByNameWithAssociations(cx context.Context, name string) error {
 	var genreId int
-	err := r.db.QueryRow(`SELECT id FROM GENRES WHERE name = ?`, name).Scan(&genreId)
+	err := r.db.QueryRowContext(cx, `SELECT id FROM GENRES WHERE name = ?`, name).Scan(&genreId)
 	if err == sql.ErrNoRows {
 		return errors.ErrNotFound
 	}
@@ -209,12 +210,12 @@ func (r *GenreRepository) DeleteGenreByNameWithAssociations(name string) error {
 		return err
 	}
 
-	_, err = r.db.Exec(`DELETE FROM movie_genre WHERE genreId = ?`, genreId)
+	_, err = r.db.ExecContext(cx, `DELETE FROM movie_genre WHERE genreId = ?`, genreId)
 	if err != nil {
 		return err
 	}
 
-	result, err := r.db.Exec(`DELETE FROM GENRES WHERE id = ?`, genreId)
+	result, err := r.db.ExecContext(cx, `DELETE FROM GENRES WHERE id = ?`, genreId)
 	if err != nil {
 		return err
 	}
