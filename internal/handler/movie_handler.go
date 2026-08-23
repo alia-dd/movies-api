@@ -29,19 +29,32 @@ func (h *Handler) GetAllMovies(w http.ResponseWriter, r *http.Request) {
 	f.Page = strings.TrimSpace(r.URL.Query().Get("page"))
 	f.Size = strings.TrimSpace(r.URL.Query().Get("size"))
 
-	payload, err := h.service.GetMovie(cx, f)
+	payload, total, err := h.service.GetMovie(cx, f)
 	if err == sql.ErrNoRows {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		http.Error(w, errors.ErrNotFound.Error(), http.StatusNotFound)
 		return
 	} else if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	jsonData, err := json.MarshalIndent(payload, "", "  ")
+
+	page, _ := strconv.Atoi(f.Page)
+	size, err := strconv.Atoi(f.Size)
+	jsonData, err := json.MarshalIndent(map[string]interface{}{
+		"pagination": map[string]int{
+			"page":        page,
+			"limit":       size,
+			"total":       total,
+			"total_pages": (total + size - 1) / size,
+		},
+		"data": payload}, "", "  ",
+	)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, errors.ErrorMarshel.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonData)
 }
@@ -51,6 +64,7 @@ func (h *Handler) GetMoviesById(w http.ResponseWriter, r *http.Request) {
 	var payload *models.MoviesDisplay
 	var byTitlePayload []models.MoviesDisplay
 	var err error
+
 	id, idErr := strconv.Atoi(r.PathValue("id"))
 	if idErr != nil {
 		byTitlePayload, err = h.service.SearchMovieByTitle(cx, r.PathValue("id"))
@@ -59,23 +73,26 @@ func (h *Handler) GetMoviesById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err == sql.ErrNoRows {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		http.Error(w, errors.ErrNotFound.Error(), http.StatusNotFound)
 		return
 	} else if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
 	var jsonData []byte
 	var jsonErr error
 	if byTitlePayload != nil {
-		jsonData, jsonErr = json.MarshalIndent(byTitlePayload, "", "  ")
+		jsonData, jsonErr = json.MarshalIndent(map[string]interface{}{"data": byTitlePayload}, "", "  ")
 	} else {
-		jsonData, jsonErr = json.MarshalIndent(payload, "", "  ")
+		jsonData, jsonErr = json.MarshalIndent(map[string]interface{}{"data": payload}, "", "  ")
 	}
 	if jsonErr != nil {
-		http.Error(w, jsonErr.Error(), http.StatusInternalServerError)
+		http.Error(w, errors.ErrorMarshel.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonData)
 }
@@ -83,28 +100,31 @@ func (h *Handler) GetMoviesById(w http.ResponseWriter, r *http.Request) {
 // add new movie to the db
 func (h *Handler) CreateMovie(w http.ResponseWriter, r *http.Request) {
 	cx := r.Context()
+
 	var movie models.Movies
 	jsonErr := json.NewDecoder(r.Body).Decode(&movie)
 	if jsonErr != nil {
 		fmt.Println(jsonErr)
-		http.Error(w, jsonErr.Error(), http.StatusBadRequest)
+		http.Error(w, errors.ErrInvalidInput.Error(), http.StatusBadRequest)
 		return
 	}
 
 	lastInsertedMovie, err := h.service.CreateMovie(cx, movie)
 	if err == sql.ErrNoRows {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		http.Error(w, errors.ErrNotFound.Error(), http.StatusNotFound)
 		return
 	} else if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	jsonData, err := json.MarshalIndent(lastInsertedMovie, "", "  ")
+	jsonData, err := json.MarshalIndent(map[string]interface{}{"data": lastInsertedMovie}, "", "  ")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, errors.ErrorMarshel.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Write(jsonData)
 }
@@ -114,15 +134,10 @@ func (h *Handler) UpdateMovie(w http.ResponseWriter, r *http.Request) {
 	cx := r.Context()
 	id, idErr := strconv.Atoi(r.PathValue("id"))
 	if idErr != nil {
-		jsonData, err := json.Marshal([]string{"message: ", "Invalid ID"})
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		http.Error(w, errors.ErrInvalidInput.Error(), http.StatusBadRequest)
-		w.Write(jsonData)
+		http.Error(w, errors.ErrInvalidId.Error(), http.StatusBadRequest)
 		return
 	}
+
 	var movie models.MovieUpdate
 	jsonErr := json.NewDecoder(r.Body).Decode(&movie)
 	if jsonErr != nil {
@@ -133,18 +148,20 @@ func (h *Handler) UpdateMovie(w http.ResponseWriter, r *http.Request) {
 
 	lastUpdatedMovie, err := h.service.UpdateMovie(cx, id, movie)
 	if err == sql.ErrNoRows {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		http.Error(w, errors.ErrNotFound.Error(), http.StatusNotFound)
 		return
 	} else if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	jsonData, err := json.MarshalIndent(lastUpdatedMovie, "", "  ")
+	jsonData, err := json.MarshalIndent(map[string]interface{}{"data": lastUpdatedMovie}, "", "  ")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, errors.ErrorMarshel.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonData)
 }
@@ -152,6 +169,7 @@ func (h *Handler) UpdateMovie(w http.ResponseWriter, r *http.Request) {
 // delete the movie with given id
 func (h *Handler) DeleteMovie(w http.ResponseWriter, r *http.Request) {
 	cx := r.Context()
+
 	val := r.URL.Query().Get("force")
 	if val == "" {
 		val = "false"
@@ -159,102 +177,91 @@ func (h *Handler) DeleteMovie(w http.ResponseWriter, r *http.Request) {
 	sentencedId := r.PathValue("id")
 	if deleteErr := h.service.DeleteMovie(cx, sentencedId, val); deleteErr != nil {
 		if deleteErr == sql.ErrNoRows {
-			http.Error(w, deleteErr.Error(), http.StatusNotFound)
+			http.Error(w, errors.ErrNotFound.Error(), http.StatusNotFound)
 			return
 		}
 		http.Error(w, deleteErr.Error(), http.StatusBadRequest)
 		return
 	}
-	jsonData, err := json.Marshal([]string{"message: ", "movie deleted"})
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+
 	w.WriteHeader(http.StatusNoContent)
-	w.Write(jsonData)
 }
 
 func (h *Handler) GetGenresForMovie(w http.ResponseWriter, r *http.Request) {
 	cx := r.Context()
 	var payload []string
 	var err error
+
 	id, idErr := strconv.Atoi(r.PathValue("movieId"))
 	if idErr != nil {
 		movie, movieErr := h.service.GetMovieByTitle(cx, r.PathValue("movieId"))
 		if movieErr != nil {
-			messge := "Invalid Movie ID"
 			if movieErr == sql.ErrNoRows {
-				messge = "Movie Not Found"
-			}
-			jsonData, err := json.Marshal([]string{"message: ", messge})
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				http.Error(w, errors.ErrNotFound.Error(), http.StatusNotFound)
 				return
 			}
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write(jsonData)
+			http.Error(w, idErr.Error(), http.StatusBadRequest)
 			return
 		}
 		id = movie.Id
 	}
-	payload, err = h.service.GetGenresForMovie(cx, id)
 
+	payload, err = h.service.GetGenresForMovie(cx, id)
 	if err == sql.ErrNoRows {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		http.Error(w, errors.ErrNotFound.Error(), http.StatusNotFound)
 		return
 	} else if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	jsonData, jsonErr := json.MarshalIndent(payload, "", "  ")
-
+	jsonData, jsonErr := json.MarshalIndent(map[string]interface{}{"data": payload}, "", "  ")
 	if jsonErr != nil {
-		http.Error(w, jsonErr.Error(), http.StatusInternalServerError)
+		http.Error(w, errors.ErrorMarshel.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonData)
 }
+
 func (h *Handler) GetActorsForMovie(w http.ResponseWriter, r *http.Request) {
 	cx := r.Context()
 	var payload []string
 	var err error
+
 	id, idErr := strconv.Atoi(r.PathValue("movieId"))
 	if idErr != nil {
 		movie, movieErr := h.service.GetMovieByTitle(cx, r.PathValue("movieId"))
 		if movieErr != nil {
-			messge := "Invalid Movie ID"
+
 			if movieErr == sql.ErrNoRows {
-				messge = "Movie Not Found"
-			}
-			jsonData, err := json.Marshal([]string{"message: ", messge})
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				http.Error(w, errors.ErrNotFound.Error(), http.StatusNotFound)
 				return
 			}
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write(jsonData)
+			http.Error(w, idErr.Error(), http.StatusBadRequest)
 			return
 		}
 		id = movie.Id
 	}
-	payload, err = h.service.GetActorsForMovie(cx, id)
 
+	payload, err = h.service.GetActorsForMovie(cx, id)
 	if err == sql.ErrNoRows {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		http.Error(w, errors.ErrNotFound.Error(), http.StatusNotFound)
 		return
 	} else if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	jsonData, jsonErr := json.MarshalIndent(payload, "", "  ")
-
+	jsonData, jsonErr := json.MarshalIndent(map[string]interface{}{"data": payload}, "", "  ")
 	if jsonErr != nil {
-		http.Error(w, jsonErr.Error(), http.StatusInternalServerError)
+		http.Error(w, errors.ErrorMarshel.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonData)
 }

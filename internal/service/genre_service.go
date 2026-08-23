@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"fmt"
 	"movies-api/internal/errors"
 	"movies-api/internal/models"
@@ -18,32 +19,32 @@ func NewGenreService(repo *repository.GenreRepository) *GenreService {
 	}
 }
 
-func (s *GenreService) CreateGenre(genre *models.Genre) error {
+func (s *GenreService) CreateGenre(cx context.Context, genre *models.Genre) error {
 	if genre.Name == "" {
 		return errors.ErrInvalidInput
 	}
 	genre.Name = strings.TrimSpace(genre.Name)
 
-	return s.repo.CreateGenre(genre)
+	return s.repo.CreateGenre(cx, genre)
 }
 
-func (s *GenreService) GetAllGenres(page, limit int) ([]models.Genre, int, error) {
+func (s *GenreService) GetAllGenres(cx context.Context, page, limit int) ([]models.Genre, int, error) {
 	if page <= 0 || limit <= 0 {
 		return nil, 0, errors.ErrInvalidInput
 	}
 
-	return s.repo.GetAllGenresWithPagination(page, limit)
+	return s.repo.GetAllGenresWithPagination(cx, page, limit)
 }
 
-func (s *GenreService) GetGenreByID(id int) (*models.Genre, error) {
+func (s *GenreService) GetGenreByID(cx context.Context, id int) (*models.Genre, error) {
 	if id <= 0 {
 		return nil, errors.ErrInvalidInput
 	}
 
-	return s.repo.GetGenreByID(id)
+	return s.repo.GetGenreByID(cx, id)
 }
 
-func (s *GenreService) SearchGenreByName(searchTerm string, page, limit int) ([]models.Genre, int, error) {
+func (s *GenreService) SearchGenreByName(cx context.Context, searchTerm string, page, limit int) ([]models.Genre, int, error) {
 	if searchTerm == "" {
 		return nil, 0, errors.ErrInvalidInput
 	}
@@ -52,10 +53,10 @@ func (s *GenreService) SearchGenreByName(searchTerm string, page, limit int) ([]
 	}
 
 	searchTerm = strings.TrimSpace(searchTerm)
-	return s.repo.SearchGenreByName(searchTerm, page, limit)
+	return s.repo.SearchGenreByName(cx, searchTerm, page, limit)
 }
 
-func (s *GenreService) UpdateGenre(id int, name string) error {
+func (s *GenreService) UpdateGenre(cx context.Context, id int, name string) error {
 	if id <= 0 {
 		return errors.ErrInvalidInput
 	}
@@ -64,16 +65,16 @@ func (s *GenreService) UpdateGenre(id int, name string) error {
 	}
 
 	name = strings.TrimSpace(name)
-	return s.repo.UpdateGenre(id, name)
+	return s.repo.UpdateGenre(cx, id, name)
 }
 
-func (s *GenreService) DeleteGenreByID(id int, force bool) error {
+func (s *GenreService) DeleteGenreByID(cx context.Context, id int, force bool) error {
 	if id <= 0 {
 		return errors.ErrInvalidInput
 	}
 
 	if !force {
-		count, err := s.repo.CountMoviesByGenre(id)
+		count, err := s.repo.CountMoviesByGenre(cx, id)
 		if err != nil {
 			return err
 		}
@@ -82,23 +83,23 @@ func (s *GenreService) DeleteGenreByID(id int, force bool) error {
 		}
 	}
 
-	return s.repo.DeleteGenreWithAssociations(id)
+	return s.repo.DeleteGenreWithAssociations(cx, id)
 }
 
-func (s *GenreService) DeleteGenreByName(name string, force bool) error {
+func (s *GenreService) DeleteGenreByName(cx context.Context, name string, force bool) error {
 	if name == "" {
 		return errors.ErrInvalidInput
 	}
 
 	name = strings.TrimSpace(name)
 
-	genre, err := s.repo.GetGenreByName(name)
+	genre, err := s.repo.GetGenreByName(cx, name)
 	if err != nil {
 		return err
 	}
 
 	if !force {
-		count, err := s.repo.CountMoviesByGenre(genre.Id)
+		count, err := s.repo.CountMoviesByGenre(cx, genre.Id)
 		if err != nil {
 			return err
 		}
@@ -107,5 +108,5 @@ func (s *GenreService) DeleteGenreByName(name string, force bool) error {
 		}
 	}
 
-	return s.repo.DeleteGenreByNameWithAssociations(name)
+	return s.repo.DeleteGenreByNameWithAssociations(cx, name)
 }

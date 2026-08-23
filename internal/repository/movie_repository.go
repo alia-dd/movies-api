@@ -4,12 +4,34 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"strings"
-	"time"
-
-	// "fmt"
+	"movies-api/internal/errors"
 	"movies-api/internal/models"
 	"strconv"
+	"strings"
+	"time"
+)
+
+const (
+	getAllSelectQuery          = `SELECT m.id, m.title, m.releaseYear, m.duration, m.overview, m.originalLanguage, m.created_at, m.updated_at FROM MOVIES m`
+	getAllSelectGenreQuery     = ` SELECT mg.movieId FROM movie_genre mg WHERE mg.genreId IN (SELECT g.id FROM GENRES g WHERE (g.id = ? or g.name = ?)) `
+	getAllSelectActorQuery     = ` SELECT ma.movieId FROM movie_actor ma WHERE ma.actorId IN (SELECT a.id FROM ACTORS a WHERE (a.id = ? or a.name = ?))`
+	getAllWithLimitOffsetQuery = ` Limit ?  OFFSET ? `
+	getByIdQuery               = `SELECT id, title, releaseYear, duration, overview, originalLanguage, created_at, updated_at FROM MOVIES WHERE id=? `
+	getByTitleQuery            = `SELECT id, title, releaseYear, duration, overview, originalLanguage, created_at, updated_at FROM MOVIES WHERE title = ? `
+	SearchByTitleQuery         = `SELECT id, title, releaseYear, duration, overview, originalLanguage, created_at, updated_at FROM MOVIES WHERE title LIKE ? `
+
+	insertMovieQuery      = `INSERT INTO MOVIES (Title, ReleaseYear, Duration, Overview, OriginalLanguage)VALUES (?, ?, ?, ?, ?)`
+	inserMovieGenreQuery  = `INSERT INTO movie_genre (movieId, genreId) VALUES (?, ?)`
+	insertMovieActorQuery = `INSERT INTO movie_actor (movieId, actorId) VALUES (?, ?)`
+
+	deleteMovieQuery                = `DELETE FROM MOVIES WHERE id=?`
+	deleteMovieGenreConnectionQuery = `DELETE FROM movie_genre WHERE movieId = ? AND genreId = ?`
+	deleteMovieActorConnectionQuery = `DELETE FROM movie_actor WHERE movieId = ? AND actorId = ?`
+
+	getGenresIdBymovieIdQuery = `SELECT genreId FROM movie_genre WHERE movieId = ?`
+	getActorsIdBymovieIdQuery = `SELECT actorId FROM movie_actor WHERE movieId = ?`
+
+	patchMovieById = `UPDATE MOVIES SET updated_at = ? `
 )
 
 type MovieRepository struct {
@@ -20,21 +42,21 @@ func NewMovieRepository(db *sql.DB) *MovieRepository {
 	return &MovieRepository{DB: db}
 }
 
-func (r *MovieRepository) Get(cx context.Context, f *models.Filter) ([]models.MoviesDisplay, error) {
+func (r *MovieRepository) Get(cx context.Context, f *models.Filter) ([]models.MoviesDisplay, int, error) {
 
-	query := `SELECT m.id, m.title, m.releaseYear, m.duration, m.overview, m.originalLanguage, m.created_at, m.updated_at FROM MOVIES m`
+	query := getAllSelectQuery
 	extraQuery := ``
 	arg := []any{}
 
 	if f.Genre != "" {
-		extraQuery += ` SELECT mg.movieId FROM movie_genre mg WHERE mg.genreId IN (SELECT g.id FROM GENRES g WHERE (g.id = ? or g.name = ?)) `
+		extraQuery += getAllSelectGenreQuery
 		arg = append(arg, f.Genre, f.Genre)
 	}
 	if f.Actor != "" && f.Genre != "" {
 		extraQuery += ` INTERSECT`
 	}
 	if f.Actor != "" {
-		extraQuery += ` SELECT ma.movieId FROM movie_actor ma WHERE ma.actorId IN (SELECT a.id FROM ACTORS a WHERE (a.id = ? or a.name = ?))`
+		extraQuery += getAllSelectActorQuery
 		arg = append(arg, f.Actor, f.Actor)
 	}
 	if f.Actor != "" || f.Genre != "" {
@@ -58,14 +80,14 @@ func (r *MovieRepository) Get(cx context.Context, f *models.Filter) ([]models.Mo
 		page, _ = strconv.Atoi(f.Page)
 	}
 	if size > -1 {
-		query += ` Limit ?  OFFSET ? `
+		query += getAllWithLimitOffsetQuery
 		arg = append(arg, size, page*size)
 
 	}
 
 	rows, rowErr := r.DB.QueryContext(cx, query, arg...)
 	if rowErr != nil {
-		return nil, rowErr
+		return nil, 0, rowErr
 	}
 	defer rows.Close()
 
@@ -74,7 +96,7 @@ func (r *MovieRepository) Get(cx context.Context, f *models.Filter) ([]models.Mo
 		movie := models.Movies{}
 		err := rows.Scan(&movie.Id, &movie.Title, &movie.ReleaseYear, &movie.Duration, &movie.Overview, &movie.OriginalLanguage, &movie.CreatedAt, &movie.UpdatedAt)
 		if err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 
 		duration := formatDurations(movie.Duration)
@@ -90,7 +112,7 @@ func (r *MovieRepository) Get(cx context.Context, f *models.Filter) ([]models.Mo
 		})
 	}
 	if err := rows.Err(); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	for i := range movies {
@@ -100,13 +122,20 @@ func (r *MovieRepository) Get(cx context.Context, f *models.Filter) ([]models.Mo
 		movies[i].Genres = movieGenres
 	}
 
-	return movies, nil
+	total := 0
+	err := r.DB.QueryRowContext(cx, getAllSelectQuery).Scan(&total)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return movies, total, nil
 }
 
 func (r *MovieRepository) GetById(cx context.Context, id int) (*models.MoviesDisplay, error) {
-	row := r.DB.QueryRowContext(cx, "SELECT id, title, releaseYear, duration, overview, originalLanguage, created_at, updated_at FROM MOVIES WHERE id=? ", id)
+	row := r.DB.QueryRowContext(cx, getByIdQuery, id)
 	movie := models.MoviesDisplay{}
-	err := row.Scan(&movie.Id, &movie.Title, &movie.ReleaseYear, &movie.Duration, &movie.Overview, &movie.OriginalLanguage, &movie.CreatedAt, &movie.UpdatedAt)
+	var duration uint16
+	err := row.Scan(&movie.Id, &movie.Title, &movie.ReleaseYear, &duration, &movie.Overview, &movie.OriginalLanguage, &movie.CreatedAt, &movie.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -114,13 +143,15 @@ func (r *MovieRepository) GetById(cx context.Context, id int) (*models.MoviesDis
 	movieGenres, _ := r.GetGenresForMovie(cx, movie.Id)
 	movie.Actors = movieActors
 	movie.Genres = movieGenres
+	movie.Duration = formatDurations(duration)
 	return &movie, nil
 }
 
 func (r *MovieRepository) GetByTitle(cx context.Context, title string) (*models.MoviesDisplay, error) {
-	row := r.DB.QueryRowContext(cx, "SELECT id, title, releaseYear, duration, overview, originalLanguage, created_at, updated_at FROM MOVIES WHERE title=? ", title)
+	row := r.DB.QueryRowContext(cx, getByTitleQuery, title)
 	movie := models.MoviesDisplay{}
-	err := row.Scan(&movie.Id, &movie.Title, &movie.ReleaseYear, &movie.Duration, &movie.Overview, &movie.OriginalLanguage, &movie.CreatedAt, &movie.UpdatedAt)
+	var duration uint16
+	err := row.Scan(&movie.Id, &movie.Title, &movie.ReleaseYear, &duration, &movie.Overview, &movie.OriginalLanguage, &movie.CreatedAt, &movie.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -128,11 +159,12 @@ func (r *MovieRepository) GetByTitle(cx context.Context, title string) (*models.
 	movieGenres, _ := r.GetGenresForMovie(cx, movie.Id)
 	movie.Actors = movieActors
 	movie.Genres = movieGenres
+	movie.Duration = formatDurations(duration)
 	return &movie, nil
 }
 
 func (r *MovieRepository) SearchByTitle(cx context.Context, title string) ([]models.MoviesDisplay, error) {
-	row, rowErr := r.DB.QueryContext(cx, "SELECT id, title, releaseYear, duration, overview, originalLanguage, created_at, updated_at FROM MOVIES WHERE title LIKE ? ", "%"+title+"%")
+	row, rowErr := r.DB.QueryContext(cx, SearchByTitleQuery, "%"+title+"%")
 	if rowErr != nil {
 		return nil, rowErr
 	}
@@ -140,10 +172,12 @@ func (r *MovieRepository) SearchByTitle(cx context.Context, title string) ([]mod
 	movies := []models.MoviesDisplay{}
 	for row.Next() {
 		movie := models.MoviesDisplay{}
-		err := row.Scan(&movie.Id, &movie.Title, &movie.ReleaseYear, &movie.Duration, &movie.Overview, &movie.OriginalLanguage, &movie.CreatedAt, &movie.UpdatedAt)
+		var duration uint16
+		err := row.Scan(&movie.Id, &movie.Title, &movie.ReleaseYear, &duration, &movie.Overview, &movie.OriginalLanguage, &movie.CreatedAt, &movie.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
+		movie.Duration = formatDurations(duration)
 		movies = append(movies, movie)
 	}
 	if err := row.Err(); err != nil {
@@ -163,22 +197,20 @@ func (r *MovieRepository) SearchByTitle(cx context.Context, title string) ([]mod
 func (r *MovieRepository) Post(cx context.Context, m models.Movies) (int64, error) {
 	tx, txErr := r.DB.BeginTx(cx, nil)
 	if txErr != nil {
-		return 0, fmt.Errorf("Failed to begin transaction: %w", txErr)
+		return 0, errors.ErrTransactionStart
 	}
-	query := ` INSERT INTO MOVIES (Title, ReleaseYear, Duration, Overview, OriginalLanguage)VALUES (?, ?, ?, ?, ?)`
-	mgQuery := `INSERT INTO movie_genre (movieId, genreId) VALUES (?, ?)`
-	maQuery := `INSERT INTO movie_actor (movieId, actorId) VALUES (?, ?)`
-	defer tx.Rollback()
-	res, postErr := tx.ExecContext(cx, query, m.Title, m.ReleaseYear, m.Duration, m.Overview, m.OriginalLanguage)
+
+	defer tx.Rollback() // if there is error revert changes to the db back to before the changes
+	res, postErr := tx.ExecContext(cx, insertMovieQuery, m.Title, m.ReleaseYear, m.Duration, m.Overview, m.OriginalLanguage)
 	if postErr != nil {
-		return 0, fmt.Errorf("failed to insert MOVIES into table: %w", postErr)
+		return 0, fmt.Errorf("failed to insert movie into table: %w", postErr)
 	}
 	movieID, resErr := res.LastInsertId()
 	if resErr != nil {
-		return 0, fmt.Errorf("failed to retreive last inserted MOVIES id: %w", resErr)
+		return 0, fmt.Errorf("failed to retreive last inserted movie id: %w", resErr)
 	}
 	for _, genreID := range m.GenreId {
-		if _, mgErr := tx.ExecContext(cx, mgQuery, movieID, genreID); mgErr != nil {
+		if _, mgErr := tx.ExecContext(cx, inserMovieGenreQuery, movieID, genreID); mgErr != nil {
 			if strings.Contains(mgErr.Error(), "UNIQUE constraint failed") {
 				continue
 			}
@@ -187,29 +219,25 @@ func (r *MovieRepository) Post(cx context.Context, m models.Movies) (int64, erro
 	}
 
 	for _, actorID := range m.ActorId {
-		if _, maErr := tx.ExecContext(cx, maQuery, movieID, actorID); maErr != nil {
+		if _, maErr := tx.ExecContext(cx, insertMovieActorQuery, movieID, actorID); maErr != nil {
 			if strings.Contains(maErr.Error(), "UNIQUE constraint failed") {
 				continue
 			}
 			return 0, fmt.Errorf("failed to link actor %d to MOVIES %q: %w", actorID, m.Title, maErr)
 		}
 	}
-	tx.Commit()
+	if err := tx.Commit(); err != nil {
+		return 0, errors.ErrTransactionCommit
+	}
 	return movieID, nil
 }
 
 func (r *MovieRepository) Patch(cx context.Context, id int, m models.MovieUpdate) error {
-	mgQuery := `INSERT INTO movie_genre (movieId, genreId) VALUES (?, ?)`
-	maQuery := `INSERT INTO movie_actor (movieId, actorId) VALUES (?, ?)`
-
-	mgDeleteQuery := `DELETE FROM movie_genre WHERE movieId = ? AND genreId = ?`
-	maDeleteQuery := `DELETE FROM movie_actor WHERE movieId = ? AND actorId = ?`
-
 	tx, txErr := r.DB.BeginTx(cx, nil)
 	if txErr != nil {
-		return fmt.Errorf("Failed to begin transaction: %w", txErr)
+		return errors.ErrTransactionStart
 	}
-	query := `UPDATE MOVIES SET updated_at = ? `
+
 	now := time.Now()
 	extraQuery := []string{}
 	arg := []any{now}
@@ -233,11 +261,16 @@ func (r *MovieRepository) Patch(cx context.Context, id int, m models.MovieUpdate
 		extraQuery = append(extraQuery, ` OriginalLanguage = ? `)
 		arg = append(arg, *m.OriginalLanguage)
 	}
-	defer tx.Rollback()
+	defer tx.Rollback() // if there is error revert changes to the db back to before the changes
 	if len(extraQuery) != 0 {
-		query = fmt.Sprintf("%s, %s WHERE id = ? ", query, strings.Join(extraQuery, ", "))
+		query := fmt.Sprintf("%s, %s WHERE id = ? ", patchMovieById, strings.Join(extraQuery, ", "))
 		arg = append(arg, id)
 		_, patchErr := tx.ExecContext(cx, query, arg...)
+		if patchErr != nil {
+			return fmt.Errorf("failed to Update MOVIE id: %d %w", id, patchErr)
+		}
+	} else {
+		_, patchErr := tx.ExecContext(cx, patchMovieById, arg...)
 		if patchErr != nil {
 			return fmt.Errorf("failed to Update MOVIE id: %d %w", id, patchErr)
 		}
@@ -245,7 +278,7 @@ func (r *MovieRepository) Patch(cx context.Context, id int, m models.MovieUpdate
 
 	if len(m.AddActorIDs) > 0 {
 		for _, actorID := range m.AddActorIDs {
-			if _, maErr := tx.ExecContext(cx, maQuery, id, actorID); maErr != nil {
+			if _, maErr := tx.ExecContext(cx, insertMovieActorQuery, id, actorID); maErr != nil {
 				if strings.Contains(maErr.Error(), "UNIQUE constraint failed") {
 					continue
 				}
@@ -255,14 +288,14 @@ func (r *MovieRepository) Patch(cx context.Context, id int, m models.MovieUpdate
 	}
 	if len(m.RemoveActorIDs) > 0 {
 		for _, actorID := range m.RemoveActorIDs {
-			if _, maErr := tx.ExecContext(cx, maDeleteQuery, id, actorID); maErr != nil {
+			if _, maErr := tx.ExecContext(cx, deleteMovieActorConnectionQuery, id, actorID); maErr != nil {
 				return fmt.Errorf("failed to remove link actor %d to MOVIES %d: %w", actorID, id, maErr)
 			}
 		}
 	}
 	if len(m.AddGenreIDs) > 0 {
 		for _, genreID := range m.AddGenreIDs {
-			if _, mgErr := tx.ExecContext(cx, mgQuery, id, genreID); mgErr != nil {
+			if _, mgErr := tx.ExecContext(cx, inserMovieGenreQuery, id, genreID); mgErr != nil {
 				if strings.Contains(mgErr.Error(), "UNIQUE constraint failed") {
 					continue
 				}
@@ -272,7 +305,7 @@ func (r *MovieRepository) Patch(cx context.Context, id int, m models.MovieUpdate
 	}
 	if len(m.RemoveGenreIDs) > 0 {
 		for _, genreID := range m.RemoveGenreIDs {
-			if _, mgErr := tx.ExecContext(cx, mgDeleteQuery, id, genreID); mgErr != nil {
+			if _, mgErr := tx.ExecContext(cx, deleteMovieGenreConnectionQuery, id, genreID); mgErr != nil {
 				return fmt.Errorf("failed to remove link genre %d to MOVIES %d: %w", genreID, id, mgErr)
 			}
 		}
@@ -281,32 +314,47 @@ func (r *MovieRepository) Patch(cx context.Context, id int, m models.MovieUpdate
 }
 
 func (r *MovieRepository) Delete(cx context.Context, MovieId int, force bool) (int64, error) {
-	if force {
+	var genresId, actorsId []int
+	var movieTitle string
 
+	if force {
 		m, payloadErr := r.GetById(cx, MovieId)
 		if payloadErr != nil {
+
 			return 0, payloadErr
 		}
-		mgQuery := `DELETE FROM movie_genre WHERE movieId = ? AND genreId = ?`
-		maQuery := `DELETE FROM movie_actor WHERE movieId = ? AND actorId = ?`
-		genresId, _ := r.GetMovie_genre(cx, MovieId)
+		movieTitle = m.Title
+		genresId, _ = r.GetMovie_genre(cx, MovieId)
+		actorsId, _ = r.GetMovie_actor(cx, MovieId)
+	}
+	tx, txErr := r.DB.BeginTx(cx, nil)
+	if txErr != nil {
+		return 0, errors.ErrTransactionStart
+	}
+	defer tx.Rollback()
+
+	if force {
 		for _, genreID := range genresId {
-			if _, mgErr := r.DB.ExecContext(cx, mgQuery, MovieId, genreID); mgErr != nil {
-				return 0, fmt.Errorf("failed to remove the link bw genre %d and MOVIES %s: %w", genreID, m.Title, mgErr)
+			if _, mgErr := tx.ExecContext(cx, deleteMovieGenreConnectionQuery, MovieId, genreID); mgErr != nil {
+				return 0, fmt.Errorf("failed to remove the link bw genre %d and MOVIES %s: %w", genreID, movieTitle, mgErr)
 			}
 		}
-		actorsId, _ := r.GetMovie_actor(cx, MovieId)
+
 		for _, actorID := range actorsId {
-			if _, maErr := r.DB.ExecContext(cx, maQuery, MovieId, actorID); maErr != nil {
-				return 0, fmt.Errorf("failed to remove the link bw genre %d and MOVIES %s: %w", actorID, m.Title, maErr)
+			if _, maErr := tx.ExecContext(cx, deleteMovieActorConnectionQuery, MovieId, actorID); maErr != nil {
+				return 0, fmt.Errorf("failed to remove the link bw actor %d and MOVIES %s: %w", actorID, movieTitle, maErr)
 			}
 		}
 	}
-	rows, deleteErr := r.DB.ExecContext(cx, "DELETE FROM MOVIES WHERE id=?", MovieId)
+	rows, deleteErr := tx.ExecContext(cx, deleteMovieQuery, MovieId)
 	if deleteErr != nil {
 		return 0, deleteErr
 	}
 	affectedR, _ := rows.RowsAffected()
+
+	if err := tx.Commit(); err != nil {
+		return 0, errors.ErrTransactionCommit
+	}
 	return affectedR, nil
 }
 
@@ -314,8 +362,7 @@ func (r *MovieRepository) Delete(cx context.Context, MovieId int, force bool) (i
 func (r *MovieRepository) GetMovie_genre(cx context.Context, MovieId int) ([]int, int) {
 	count := 0
 	genresId := []int{}
-	mgQuery := `SELECT genreId FROM movie_genre WHERE movieId = ?`
-	rows, err := r.DB.QueryContext(cx, mgQuery, MovieId)
+	rows, err := r.DB.QueryContext(cx, getGenresIdBymovieIdQuery, MovieId)
 	if err != nil {
 		return []int{}, 0
 	}
@@ -336,9 +383,7 @@ func (r *MovieRepository) GetMovie_genre(cx context.Context, MovieId int) ([]int
 func (r *MovieRepository) GetMovie_actor(cx context.Context, MovieId int) ([]int, int) {
 	count := 0
 	actorsId := []int{}
-	maQuery := `SELECT actorId FROM movie_actor WHERE movieId = ?`
-
-	rows, err := r.DB.QueryContext(cx, maQuery, MovieId)
+	rows, err := r.DB.QueryContext(cx, getActorsIdBymovieIdQuery, MovieId)
 	if err != nil {
 		return []int{}, 0
 	}
@@ -363,7 +408,7 @@ func (r *MovieRepository) GetGenresForMovie(cx context.Context, MovieId int) ([]
 	genresId, _ := r.GetMovie_genre(cx, MovieId)
 
 	for _, genreId := range genresId {
-		genre, err := genreRepo.GetGenreByID(genreId)
+		genre, err := genreRepo.GetGenreByID(cx, genreId)
 		if err != nil {
 			continue
 		}

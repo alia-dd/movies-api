@@ -19,6 +19,7 @@ func NewGenreHandler(genreService *service.GenreService) *GenreHandler {
 }
 
 func (h *GenreHandler) CreateGenre(w http.ResponseWriter, r *http.Request) {
+	cx := r.Context()
 	var genre models.Genre
 
 	err := json.NewDecoder(r.Body).Decode(&genre)
@@ -26,7 +27,7 @@ func (h *GenreHandler) CreateGenre(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid JSON format", http.StatusBadRequest)
 		return
 	}
-	err = h.genreService.CreateGenre(&genre)
+	err = h.genreService.CreateGenre(cx, &genre)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -38,6 +39,7 @@ func (h *GenreHandler) CreateGenre(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *GenreHandler) GetAllGenres(w http.ResponseWriter, r *http.Request) {
+	cx := r.Context()
 	pageStr := r.URL.Query().Get("page")
 	if pageStr == "" {
 		pageStr = "1"
@@ -64,7 +66,7 @@ func (h *GenreHandler) GetAllGenres(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	genres, total, err := h.genreService.GetAllGenres(page, limit)
+	genres, total, err := h.genreService.GetAllGenres(cx, page, limit)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -84,6 +86,7 @@ func (h *GenreHandler) GetAllGenres(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *GenreHandler) GetGenreByID(w http.ResponseWriter, r *http.Request) {
+	cx := r.Context()
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -91,7 +94,7 @@ func (h *GenreHandler) GetGenreByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	genre, err := h.genreService.GetGenreByID(id)
+	genre, err := h.genreService.GetGenreByID(cx, id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -103,6 +106,7 @@ func (h *GenreHandler) GetGenreByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *GenreHandler) SearchGenreByName(w http.ResponseWriter, r *http.Request) {
+	cx := r.Context()
 	searchTerm := r.URL.Query().Get("q")
 	pageStr := r.URL.Query().Get("page")
 	if pageStr == "" {
@@ -135,7 +139,7 @@ func (h *GenreHandler) SearchGenreByName(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	genres, total, err := h.genreService.SearchGenreByName(searchTerm, page, limit)
+	genres, total, err := h.genreService.SearchGenreByName(cx, searchTerm, page, limit)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -155,6 +159,7 @@ func (h *GenreHandler) SearchGenreByName(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *GenreHandler) UpdateGenre(w http.ResponseWriter, r *http.Request) {
+	cx := r.Context()
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -171,7 +176,7 @@ func (h *GenreHandler) UpdateGenre(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.genreService.UpdateGenre(id, updateData.Name)
+	err = h.genreService.UpdateGenre(cx, id, updateData.Name)
 	if err != nil {
 		if err.Error() == "record not found" {
 			http.Error(w, "Genre not found", http.StatusNotFound)
@@ -181,13 +186,14 @@ func (h *GenreHandler) UpdateGenre(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	genre, _ := h.genreService.GetGenreByID(id)
+	genre, _ := h.genreService.GetGenreByID(cx, id)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(genre)
 }
 
 func (h *GenreHandler) DeleteGenreByID(w http.ResponseWriter, r *http.Request) {
+	cx := r.Context()
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -198,7 +204,7 @@ func (h *GenreHandler) DeleteGenreByID(w http.ResponseWriter, r *http.Request) {
 	forceStr := r.URL.Query().Get("force")
 	force := forceStr == "true"
 
-	err = h.genreService.DeleteGenreByID(id, force)
+	err = h.genreService.DeleteGenreByID(cx, id, force)
 	if err != nil {
 		if err.Error() == "record not found" {
 			http.Error(w, "Genre not found", http.StatusNotFound)
@@ -215,6 +221,7 @@ func (h *GenreHandler) DeleteGenreByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *GenreHandler) DeleteGenreByName(w http.ResponseWriter, r *http.Request) {
+	cx := r.Context()
 	name := r.PathValue("name")
 	if name == "" {
 		http.Error(w, "name cannot be empty", http.StatusBadRequest)
@@ -224,7 +231,7 @@ func (h *GenreHandler) DeleteGenreByName(w http.ResponseWriter, r *http.Request)
 	forceStr := r.URL.Query().Get("force")
 	force := forceStr == "true"
 
-	err := h.genreService.DeleteGenreByName(name, force)
+	err := h.genreService.DeleteGenreByName(cx, name, force)
 	if err != nil {
 		if err.Error() == "record not found" {
 			http.Error(w, "Genre not found", http.StatusNotFound)
