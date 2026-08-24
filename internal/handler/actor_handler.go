@@ -1,11 +1,14 @@
 package handler
 
 import (
+	"database/sql"
 	"encoding/json"
+	"movies-api/internal/errors"
 	"movies-api/internal/models"
 	"movies-api/internal/service"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 type ActorHandler struct {
@@ -98,7 +101,7 @@ func (h *ActorHandler) GetAllActors(w http.ResponseWriter, r *http.Request) {
 			"page":        page,
 			"limit":       limit,
 			"total":       total,
-			"total_pages": (total/limit - 1) / limit,
+			"total_pages": (total + limit - 1) / limit,
 		},
 	})
 }
@@ -124,11 +127,14 @@ func (h *ActorHandler) GetActorsById(w http.ResponseWriter, r *http.Request) {
 
 func (h *ActorHandler) GetActorByName(w http.ResponseWriter, r *http.Request) {
 
-	name := r.PathValue("name")
+	name := strings.TrimSpace(r.URL.Query().Get("name"))
 
 	actor, err := h.service.FindByName(name)
 
-	if err != nil {
+	if err == sql.ErrNoRows {
+		http.Error(w, errors.ErrNotFound.Error(), http.StatusNotFound)
+		return
+	} else if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

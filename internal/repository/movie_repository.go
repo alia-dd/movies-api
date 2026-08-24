@@ -19,6 +19,7 @@ const (
 	getByIdQuery               = `SELECT id, title, releaseYear, duration, overview, originalLanguage, created_at, updated_at FROM MOVIES WHERE id=? `
 	getByTitleQuery            = `SELECT id, title, releaseYear, duration, overview, originalLanguage, created_at, updated_at FROM MOVIES WHERE title = ? `
 	SearchByTitleQuery         = `SELECT id, title, releaseYear, duration, overview, originalLanguage, created_at, updated_at FROM MOVIES WHERE title LIKE ? `
+	getAllSelectCountQuery     = `SELECT COUNT(*) FROM MOVIES `
 
 	insertMovieQuery      = `INSERT INTO MOVIES (Title, ReleaseYear, Duration, Overview, OriginalLanguage)VALUES (?, ?, ?, ?, ?)`
 	inserMovieGenreQuery  = `INSERT INTO movie_genre (movieId, genreId) VALUES (?, ?)`
@@ -43,7 +44,11 @@ func NewMovieRepository(db *sql.DB) *MovieRepository {
 }
 
 func (r *MovieRepository) Get(cx context.Context, f *models.Filter) ([]models.MoviesDisplay, int, error) {
-
+	total := 0
+	err := r.DB.QueryRowContext(cx, getAllSelectCountQuery).Scan(&total)
+	if err != nil {
+		return nil, 0, err
+	}
 	query := getAllSelectQuery
 	extraQuery := ``
 	arg := []any{}
@@ -60,7 +65,7 @@ func (r *MovieRepository) Get(cx context.Context, f *models.Filter) ([]models.Mo
 		arg = append(arg, f.Actor, f.Actor)
 	}
 	if f.Actor != "" || f.Genre != "" {
-		extraQuery = ` WHERE m.id IN (` + extraQuery + `)`
+		extraQuery = ` m.id IN (` + extraQuery + `)`
 	}
 	if f.Year != "" {
 		if f.Actor != "" || f.Genre != "" {
@@ -69,20 +74,30 @@ func (r *MovieRepository) Get(cx context.Context, f *models.Filter) ([]models.Mo
 		extraQuery += ` m.releaseYear = ?`
 		arg = append(arg, f.Year)
 	}
-	query += extraQuery
+	if extraQuery != "" {
+		extraQuery = ` WHERE ` + extraQuery
+		query += extraQuery
+	}
 	size, page := -1, 0
 	if f.Size != "" {
 		if s, err := strconv.Atoi(f.Size); err == nil {
 			size = s
+			if size > total {
+				return nil, 0, errors.ErrInvalidInput
+			}
 		}
 	}
+
 	if f.Page != "" {
 		page, _ = strconv.Atoi(f.Page)
+		f.Page = strconv.Itoa(page)
 	}
 	if size > -1 {
 		query += getAllWithLimitOffsetQuery
 		arg = append(arg, size, page*size)
 
+	} else {
+		f.Size = strconv.Itoa(total)
 	}
 
 	rows, rowErr := r.DB.QueryContext(cx, query, arg...)
@@ -122,12 +137,6 @@ func (r *MovieRepository) Get(cx context.Context, f *models.Filter) ([]models.Mo
 		movies[i].Genres = movieGenres
 	}
 
-	total := 0
-	err := r.DB.QueryRowContext(cx, getAllSelectQuery).Scan(&total)
-	if err != nil {
-		return nil, 0, err
-	}
-
 	return movies, total, nil
 }
 
@@ -164,6 +173,7 @@ func (r *MovieRepository) GetByTitle(cx context.Context, title string) (*models.
 }
 
 func (r *MovieRepository) SearchByTitle(cx context.Context, title string) ([]models.MoviesDisplay, error) {
+
 	row, rowErr := r.DB.QueryContext(cx, SearchByTitleQuery, "%"+title+"%")
 	if rowErr != nil {
 		return nil, rowErr

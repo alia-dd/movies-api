@@ -7,8 +7,12 @@ import (
 )
 
 func main() {
-	port := ":8800"
+	// running this Fetch seed data func takes a long time
+	// (approximately an hour for 200 movie its actors and genres)
+	// so dont run it if not must
 	// database.FetchSeedData()
+
+	port := ":8800"
 	srv, err := route()
 	if err != nil {
 		fmt.Println(err)

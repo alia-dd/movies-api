@@ -12,6 +12,12 @@ type Filter struct {
 	Size  string
 }
 
+type KeyData struct {
+	Id   int    `json:"id"`
+	User string `json:"use"`
+	Key  string `json:"key"`
+}
+
 type Movies struct {
 	Id          int    `json:"id"`
 	Title       string `json:"title"`
