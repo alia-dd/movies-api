@@ -425,7 +425,7 @@ func (r *MovieRepository) GetActorsForMovie(cx context.Context, MovieId int) ([]
 	actorsId, _ := r.GetMovie_actor(cx, MovieId)
 
 	for _, actorid := range actorsId {
-		actor, err := actorRepo.FindById(actorid)
+		actor, err := actorRepo.FindById(cx, actorid)
 		if err != nil {
 			continue
 		}

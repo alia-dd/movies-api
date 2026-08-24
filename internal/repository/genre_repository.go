@@ -19,8 +19,14 @@ func NewGenreRepository(db *sql.DB) *GenreRepository {
 }
 
 func (r *GenreRepository) CreateGenre(cx context.Context, genre *models.Genre) error {
+	tx, txErr := r.db.BeginTx(cx, nil)
+	if txErr != nil {
+		return errors.ErrTransactionStart
+	}
+	defer tx.Rollback() // if there is error revert changes to the db back to before the changes
+
 	query := `INSERT INTO GENRES (name) VALUES(?)`
-	result, err := r.db.ExecContext(cx, query, genre.Name)
+	result, err := tx.ExecContext(cx, query, genre.Name)
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
 			return errors.ErrDuplicateKey
@@ -34,12 +40,13 @@ func (r *GenreRepository) CreateGenre(cx context.Context, genre *models.Genre) e
 	}
 	genre.Id = int(id)
 
-	err = r.db.QueryRowContext(cx, `SELECT created_at, updated_at FROM GENRES WHERE id = ?`, id).
+	err = tx.QueryRowContext(cx, `SELECT created_at, updated_at FROM GENRES WHERE id = ?`, id).
 		Scan(&genre.CreatedAt, &genre.UpdatedAt)
 	return err
 }
 
 func (r *GenreRepository) GetAllGenresWithPagination(cx context.Context, page, limit int) ([]models.Genre, int, error) {
+
 	countQuery := `SELECT COUNT(*) FROM GENRES`
 	var total int
 	err := r.db.QueryRowContext(cx, countQuery).Scan(&total)
@@ -126,8 +133,13 @@ func (r *GenreRepository) CountMoviesByGenre(cx context.Context, genreId int) (i
 }
 
 func (r *GenreRepository) UpdateGenre(cx context.Context, id int, name string) error {
+	tx, txErr := r.db.BeginTx(cx, nil)
+	if txErr != nil {
+		return errors.ErrTransactionStart
+	}
+	defer tx.Rollback() // if there is error revert changes to the db back to before the changes
 	query := `UPDATE GENRES SET name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
-	result, err := r.db.ExecContext(cx, query, name, id)
+	result, err := tx.ExecContext(cx, query, name, id)
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
 			return errors.ErrDuplicateKey
@@ -146,8 +158,13 @@ func (r *GenreRepository) UpdateGenre(cx context.Context, id int, name string) e
 }
 
 func (r *GenreRepository) DeleteGenre(cx context.Context, id int) error {
+	tx, txErr := r.db.BeginTx(cx, nil)
+	if txErr != nil {
+		return errors.ErrTransactionStart
+	}
+	defer tx.Rollback() // if there is error revert changes to the db back to before the changes
 	query := `DELETE FROM GENRES WHERE id = ?`
-	result, err := r.db.ExecContext(cx, query, id)
+	result, err := tx.ExecContext(cx, query, id)
 	if err != nil {
 		return err
 	}
@@ -162,14 +179,19 @@ func (r *GenreRepository) DeleteGenre(cx context.Context, id int) error {
 }
 
 func (r *GenreRepository) DeleteGenreWithAssociations(cx context.Context, id int) error {
+	tx, txErr := r.db.BeginTx(cx, nil)
+	if txErr != nil {
+		return errors.ErrTransactionStart
+	}
+	defer tx.Rollback() // if there is error revert changes to the db back to before the changes
 	query1 := `DELETE FROM movie_genre WHERE genreId = ?`
-	_, err := r.db.ExecContext(cx, query1, id)
+	_, err := tx.ExecContext(cx, query1, id)
 	if err != nil {
 		return err
 	}
 
 	query2 := `DELETE FROM GENRES WHERE id = ?`
-	result, err := r.db.ExecContext(cx, query2, id)
+	result, err := tx.ExecContext(cx, query2, id)
 	if err != nil {
 		return err
 	}
@@ -185,8 +207,13 @@ func (r *GenreRepository) DeleteGenreWithAssociations(cx context.Context, id int
 }
 
 func (r *GenreRepository) DeleteGenreByName(cx context.Context, name string) error {
+	tx, txErr := r.db.BeginTx(cx, nil)
+	if txErr != nil {
+		return errors.ErrTransactionStart
+	}
+	defer tx.Rollback() // if there is error revert changes to the db back to before the changes
 	query := `DELETE FROM GENRES WHERE name = ?`
-	result, err := r.db.ExecContext(cx, query, name)
+	result, err := tx.ExecContext(cx, query, name)
 	if err != nil {
 		return err
 	}
@@ -201,8 +228,13 @@ func (r *GenreRepository) DeleteGenreByName(cx context.Context, name string) err
 }
 
 func (r *GenreRepository) DeleteGenreByNameWithAssociations(cx context.Context, name string) error {
+	tx, txErr := r.db.BeginTx(cx, nil)
+	if txErr != nil {
+		return errors.ErrTransactionStart
+	}
+	defer tx.Rollback() // if there is error revert changes to the db back to before the changes
 	var genreId int
-	err := r.db.QueryRowContext(cx, `SELECT id FROM GENRES WHERE name = ?`, name).Scan(&genreId)
+	err := tx.QueryRowContext(cx, `SELECT id FROM GENRES WHERE name = ?`, name).Scan(&genreId)
 	if err == sql.ErrNoRows {
 		return errors.ErrNotFound
 	}
@@ -210,12 +242,12 @@ func (r *GenreRepository) DeleteGenreByNameWithAssociations(cx context.Context, 
 		return err
 	}
 
-	_, err = r.db.ExecContext(cx, `DELETE FROM movie_genre WHERE genreId = ?`, genreId)
+	_, err = tx.ExecContext(cx, `DELETE FROM movie_genre WHERE genreId = ?`, genreId)
 	if err != nil {
 		return err
 	}
 
-	result, err := r.db.ExecContext(cx, `DELETE FROM GENRES WHERE id = ?`, genreId)
+	result, err := tx.ExecContext(cx, `DELETE FROM GENRES WHERE id = ?`, genreId)
 	if err != nil {
 		return err
 	}
