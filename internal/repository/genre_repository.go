@@ -42,7 +42,10 @@ func (r *GenreRepository) CreateGenre(cx context.Context, genre *models.Genre) e
 
 	err = tx.QueryRowContext(cx, `SELECT created_at, updated_at FROM GENRES WHERE id = ?`, id).
 		Scan(&genre.CreatedAt, &genre.UpdatedAt)
-	return err
+	if err != nil {
+		return err
+	}
+	return tx.Commit()
 }
 
 func (r *GenreRepository) GetAllGenresWithPagination(cx context.Context, page, limit int) ([]models.Genre, int, error) {

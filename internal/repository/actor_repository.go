@@ -44,7 +44,7 @@ func (r *ActorsRepository) CreateActor(ctx context.Context, actor *models.Actor)
 	actor.Id = int(id)
 	actor.CreatedAt = now
 	actor.UpdatedAt = now
-	return nil
+	return tx.Commit()
 }
 
 func (r *ActorsRepository) Update(ctx context.Context, actor *models.Actor) error {
