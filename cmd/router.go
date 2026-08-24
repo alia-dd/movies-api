@@ -58,7 +58,7 @@ func route() (http.Handler, error) {
 	mux.HandleFunc("PATCH /api/actors/{id}", Middleware(db, actorHandler.UpdateActor))
 	mux.HandleFunc("GET /api/actors", Middleware(db, actorHandler.GetAllActors))
 	mux.HandleFunc("GET /api/actors/{id}", Middleware(db, actorHandler.GetActorsById))
-	mux.HandleFunc("GET /api/actors/name/{name}", Middleware(db, actorHandler.GetActorByName))
+	mux.HandleFunc("GET /api/actors/name", Middleware(db, actorHandler.GetActorByName))
 	mux.HandleFunc("DELETE /api/actors/{id}", Middleware(db, actorHandler.DeleteActorsById))
 	mux.HandleFunc("DELETE /api/actors/name/{name}", Middleware(db, actorHandler.DeleteActorsByName))
 
@@ -70,6 +70,7 @@ func route() (http.Handler, error) {
 	mux.HandleFunc("POST /api/movies", Middleware(db, movieHandler.CreateMovie))
 	mux.HandleFunc("GET /api/movies", Middleware(db, movieHandler.GetAllMovies))
 	mux.HandleFunc("GET /api/movies/{id}", Middleware(db, movieHandler.GetMoviesById))
+	mux.HandleFunc("GET /api/movies/search", Middleware(db, movieHandler.GetMoviesByTitle))
 	mux.HandleFunc("PATCH /api/movies/{id}", Middleware(db, movieHandler.UpdateMovie))
 	mux.HandleFunc("DELETE /api/movies/{id}", Middleware(db, movieHandler.DeleteMovie))
 	mux.HandleFunc("GET /api/movies/{movieId}/actors", Middleware(db, movieHandler.GetActorsForMovie)) // get all actor in selected movie

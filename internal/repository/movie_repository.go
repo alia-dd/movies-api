@@ -44,7 +44,11 @@ func NewMovieRepository(db *sql.DB) *MovieRepository {
 }
 
 func (r *MovieRepository) Get(cx context.Context, f *models.Filter) ([]models.MoviesDisplay, int, error) {
-
+	total := 0
+	err := r.DB.QueryRowContext(cx, getAllSelectCountQuery).Scan(&total)
+	if err != nil {
+		return nil, 0, err
+	}
 	query := getAllSelectQuery
 	extraQuery := ``
 	arg := []any{}
@@ -78,8 +82,12 @@ func (r *MovieRepository) Get(cx context.Context, f *models.Filter) ([]models.Mo
 	if f.Size != "" {
 		if s, err := strconv.Atoi(f.Size); err == nil {
 			size = s
+			if size > total {
+				return nil, 0, errors.ErrInvalidInput
+			}
 		}
 	}
+
 	if f.Page != "" {
 		page, _ = strconv.Atoi(f.Page)
 		f.Page = strconv.Itoa(page)
@@ -88,6 +96,8 @@ func (r *MovieRepository) Get(cx context.Context, f *models.Filter) ([]models.Mo
 		query += getAllWithLimitOffsetQuery
 		arg = append(arg, size, page*size)
 
+	} else {
+		f.Size = strconv.Itoa(total)
 	}
 
 	rows, rowErr := r.DB.QueryContext(cx, query, arg...)
@@ -127,15 +137,6 @@ func (r *MovieRepository) Get(cx context.Context, f *models.Filter) ([]models.Mo
 		movies[i].Genres = movieGenres
 	}
 
-	total := 0
-	err := r.DB.QueryRowContext(cx, getAllSelectCountQuery).Scan(&total)
-	if err != nil {
-		return nil, 0, err
-	}
-	if size == -1 {
-		f.Size = strconv.Itoa(total)
-	}
-
 	return movies, total, nil
 }
 
@@ -172,6 +173,7 @@ func (r *MovieRepository) GetByTitle(cx context.Context, title string) (*models.
 }
 
 func (r *MovieRepository) SearchByTitle(cx context.Context, title string) ([]models.MoviesDisplay, error) {
+
 	row, rowErr := r.DB.QueryContext(cx, SearchByTitleQuery, "%"+title+"%")
 	if rowErr != nil {
 		return nil, rowErr

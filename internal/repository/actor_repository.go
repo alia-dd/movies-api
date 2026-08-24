@@ -115,6 +115,8 @@ func (r *ActorsRepository) GetAllActors(page, limit int) ([]models.Actor, int, e
 			&actor.Id,
 			&actor.Name,
 			&actor.BirthDate,
+			&actor.CreatedAt,
+			&actor.UpdatedAt,
 		)
 		if err != nil {
 			return nil, total, err
@@ -137,7 +139,7 @@ func (r *ActorsRepository) DeleteActorsById(id int, force bool) error {
 	// checking if the actor is related to any movies
 	var count int
 	err = r.db.QueryRow(
-		"SELECT COUNT(*) FROM movie_actors WHERE actor_id = ?", id,
+		"SELECT COUNT(*) FROM movie_actor WHERE actorId = ?", id,
 	).Scan(&count)
 
 	if err != nil {
@@ -149,7 +151,7 @@ func (r *ActorsRepository) DeleteActorsById(id int, force bool) error {
 	}
 	// removing the relation first
 	if force {
-		_, err := r.db.Exec(`DELETE FROM movie_actors WHERE actor_id = ?`, id)
+		_, err := r.db.Exec(`DELETE FROM movie_actor WHERE actorId = ?`, id)
 		if err != nil {
 			return err
 		}
@@ -185,7 +187,7 @@ func (r *ActorsRepository) DeleteActorsByName(name string, force bool) error {
 	// checking if the actor is related to any movies
 	var count int
 	err = r.db.QueryRow(
-		"SELECT COUNT(*) FROM movie_actors WHERE actor_id = ?", id,
+		"SELECT COUNT(*) FROM movie_actor WHERE actorId = ?", id,
 	).Scan(&count)
 
 	if err != nil {
@@ -197,7 +199,7 @@ func (r *ActorsRepository) DeleteActorsByName(name string, force bool) error {
 	}
 	// removing the relation first
 	if force {
-		_, err := r.db.Exec(`DELETE FROM movie_actors WHERE actor_id = ?`, id)
+		_, err := r.db.Exec(`DELETE FROM movie_actor WHERE actorId = ?`, id)
 		if err != nil {
 			return err
 		}

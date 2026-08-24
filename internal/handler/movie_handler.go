@@ -46,7 +46,7 @@ func (h *Handler) GetAllMovies(w http.ResponseWriter, r *http.Request) {
 			"page":        page,
 			"limit":       size,
 			"total":       total,
-			"total_pages": (total+size)/size - 1,
+			"total_pages": (total + size - 1) / size,
 		},
 		"data": payload,
 	})
@@ -89,6 +89,35 @@ func (h *Handler) GetMoviesById(w http.ResponseWriter, r *http.Request) {
 	} else {
 		jsonData, jsonErr = json.MarshalIndent(map[string]interface{}{"data": payload}, "", "  ")
 	}
+	if jsonErr != nil {
+		http.Error(w, errors.ErrorMarshel.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonData)
+}
+
+func (h *Handler) GetMoviesByTitle(w http.ResponseWriter, r *http.Request) {
+	cx := r.Context()
+
+	title := strings.TrimSpace(r.URL.Query().Get("search"))
+	if title == "" {
+		http.Error(w, errors.ErrInvalidInput.Error(), http.StatusBadRequest)
+		return
+	}
+	byTitlePayload, err := h.service.SearchMovieByTitle(cx, title)
+
+	if err == sql.ErrNoRows {
+		http.Error(w, errors.ErrNotFound.Error(), http.StatusNotFound)
+		return
+	} else if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	jsonData, jsonErr := json.MarshalIndent(map[string]interface{}{"data": byTitlePayload}, "", "  ")
 	if jsonErr != nil {
 		http.Error(w, errors.ErrorMarshel.Error(), http.StatusInternalServerError)
 		return
