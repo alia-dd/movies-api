@@ -2,13 +2,17 @@ package database
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"movies-api/internal/errors"
 	"movies-api/internal/models"
 	"movies-api/internal/repository"
 	"os"
+	"strings"
 )
 
 var scheme = `
@@ -29,7 +33,7 @@ var scheme = `
 	name TEXT NOT NULL,
 	birthdate TEXT NOT NULL,
 	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-	updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 	UNIQUE(name, birthdate)
 	);
 
@@ -56,19 +60,24 @@ var scheme = `
 	FOREIGN KEY (actorId) REFERENCES ACTORS (id) 
 	);
 
+	CREATE TABLE IF NOT EXISTS APIKEY(
+	id   INTEGER PRIMARY KEY,
+	user TEXT NOT NULL UNIQUE,
+	key  TEXT NOT NULL UNIQUE,
+	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+	updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	);
 `
+
+var ApiPreFix = `test_api`
 
 type MovieSeed struct {
 	Results []models.Movies `json:"results"`
 }
 
 func InitializeMovieTable(db *sql.DB) error {
-	if tableExist(db) {
-		return nil
-	}
-
 	if _, err := db.Exec(scheme); err != nil {
-		return fmt.Errorf("failed to create MOVIES table: %w", err)
+		return fmt.Errorf("failed to create table: %w", err)
 	}
 
 	return nil
@@ -109,6 +118,9 @@ func SeedData(db *sql.DB) error {
 	}
 	for _, actor := range actors {
 		if err := ar.CreateActor(actor); err != nil {
+			if strings.Contains(err.Error(), errors.ErrDuplicateKey.Error()) {
+				continue
+			}
 			return fmt.Errorf("failed to seed movie %q: %w", actor.Name, err)
 		}
 	}
@@ -124,6 +136,9 @@ func SeedData(db *sql.DB) error {
 	}
 	for _, genre := range genres {
 		if err := gr.CreateGenre(cx, genre); err != nil {
+			if strings.Contains(err.Error(), errors.ErrDuplicateKey.Error()) {
+				continue
+			}
 			return fmt.Errorf("failed to seed genre %q: %w", genre.Name, err)
 		}
 	}
@@ -160,4 +175,45 @@ func clearTables(cx context.Context, db *sql.DB) error {
 		}
 	}
 	return tx.Commit()
+}
+
+func GenerateApiKey(db *sql.DB, user *string) (string, error) {
+	query := `INSERT INTO APIKEY (user, key)VALUES (?, ?)`
+	//generate 32 bit random string
+	key := make([]byte, 32)
+	if _, err := rand.Read(key); err != nil {
+		return "", err
+	}
+
+	//hash the random bit string for security
+	hashKey := sha256.Sum256(key)
+	hashHex := hex.EncodeToString(hashKey[:])
+
+	_, err := db.Exec(query, user, hashHex)
+	if err != nil {
+		return "", err
+	}
+
+	fullKey := ApiPreFix + "_" + hex.EncodeToString(key)
+	return fullKey, nil
+}
+
+func GetApiKey(db *sql.DB, key string) bool {
+	var count int
+	secretkey := strings.TrimPrefix(key, ApiPreFix+"_")
+	secret, err := hex.DecodeString(secretkey)
+	if err != nil {
+		return false
+	}
+
+	query := `SELECT count(*) FROM APIKEY WHERE key = ?`
+
+	hashKey := sha256.Sum256(secret)
+	hashHex := hex.EncodeToString(hashKey[:])
+
+	apiErr := db.QueryRow(query, hashHex).Scan(&count)
+	if apiErr != nil || count <= 0 {
+		return false
+	}
+	return true
 }

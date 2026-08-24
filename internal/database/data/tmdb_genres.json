@@ -17,23 +17,23 @@
   },
   {
     "id": 5,
-    "name": "Horror"
-  },
-  {
-    "id": 6,
     "name": "Thriller"
   },
   {
-    "id": 7,
+    "id": 6,
     "name": "Animation"
   },
   {
-    "id": 8,
+    "id": 7,
     "name": "Family"
   },
   {
-    "id": 9,
+    "id": 8,
     "name": "Comedy"
+  },
+  {
+    "id": 9,
+    "name": "Horror"
   },
   {
     "id": 10,
@@ -41,15 +41,15 @@
   },
   {
     "id": 11,
-    "name": "Mystery"
-  },
-  {
-    "id": 12,
     "name": "Romance"
   },
   {
+    "id": 12,
+    "name": "Mystery"
+  },
+  {
     "id": 13,
-    "name": "War"
+    "name": "Documentary"
   },
   {
     "id": 14,
@@ -57,22 +57,22 @@
   },
   {
     "id": 15,
-    "name": "Music"
-  },
-  {
-    "id": 16,
-    "name": "Western"
-  },
-  {
-    "id": 17,
-    "name": "History"
-  },
-  {
-    "id": 18,
     "name": "TV Movie"
   },
   {
+    "id": 16,
+    "name": "War"
+  },
+  {
+    "id": 17,
+    "name": "Music"
+  },
+  {
+    "id": 18,
+    "name": "History"
+  },
+  {
     "id": 19,
-    "name": "Documentary"
+    "name": "Western"
   }
 ]

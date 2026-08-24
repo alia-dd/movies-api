@@ -29,7 +29,7 @@ func (h *Handler) GetAllMovies(w http.ResponseWriter, r *http.Request) {
 	f.Page = strings.TrimSpace(r.URL.Query().Get("page"))
 	f.Size = strings.TrimSpace(r.URL.Query().Get("size"))
 
-	payload, total, err := h.service.GetMovie(cx, f)
+	payload, total, err := h.service.GetMovie(cx, &f)
 	if err == sql.ErrNoRows {
 		http.Error(w, errors.ErrNotFound.Error(), http.StatusNotFound)
 		return
@@ -39,18 +39,20 @@ func (h *Handler) GetAllMovies(w http.ResponseWriter, r *http.Request) {
 	}
 
 	page, _ := strconv.Atoi(f.Page)
-	size, err := strconv.Atoi(f.Size)
-	jsonData, err := json.MarshalIndent(map[string]interface{}{
+	size, _ := strconv.Atoi(f.Size)
+	fmt.Println("ger4", page, size, f.Size)
+	jsonData, err := json.Marshal(map[string]interface{}{
 		"pagination": map[string]int{
 			"page":        page,
 			"limit":       size,
 			"total":       total,
-			"total_pages": (total + size - 1) / size,
+			"total_pages": (total+size)/size - 1,
 		},
-		"data": payload}, "", "  ",
-	)
+		"data": payload,
+	})
 	if err != nil {
-		http.Error(w, errors.ErrorMarshel.Error(), http.StatusInternalServerError)
+		fmt.Println(err)
+		http.Error(w, errors.ErrorMarshel.Error(), http.StatusAccepted)
 		return
 	}
 

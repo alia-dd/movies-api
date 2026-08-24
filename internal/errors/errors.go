@@ -13,4 +13,7 @@ var (
 	ErrTransactionStart   = errors.New("Failed To Begin Transaction")
 	ErrTransactionCommit  = errors.New("Failed To Commit Transaction")
 	ErrServerErr          = errors.New("Internal Server Error")
+	ErrWrongApiKey        = errors.New("Invalid Api Key ")
+	// ErrMissingPageNumver  = errors.New("Page Numvber not provided Data Missing")
+	// ErrMissingLimit       = errors.New("Data Limit no Data Missing")
 )
