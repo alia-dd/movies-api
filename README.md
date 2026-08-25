@@ -63,13 +63,13 @@ movies-api/
 
 
 ```bash
-git clone git@github.com:alia-dd/movies-api.git
+git clone https://gitea.kood.tech/aliadaahirmohamed/movies-api.git
 cd movies-api
 ```
 
 ### Prerequisites
 
-- Go 1.25+ (the project declares `go 1.25.7`)
+- Go 1.25+
 - Git
 
 ### Install dependencies
@@ -97,8 +97,31 @@ The server supports a `-s` flag to populate SQLite with seed data from the JSON 
 ```bash
 go run ./cmd -s
 ```
+### API Key Authentication
 
-> This will initialize the database and insert seeded actors, genres, and movies.
+All API endpoints are protected by an API key.
+
+The API key is checked by the middleware before the request reaches the handler. Requests without a valid API key will be rejected.
+
+### Generate an API Key
+
+You can generate an API key using the `-g` flag:
+
+```bash
+go run ./cmd -g generate
+```
+
+The generated API key will be printed in the terminal.
+
+### Using the API Key
+
+Add the API key to your request using the `apikey` query parameter:
+
+For example:
+
+```bash
+curl "http://localhost:8800/api/actors?apikey=YOUR_API_KEY"
+```
 
 ## API Endpoints
 
@@ -175,6 +198,19 @@ curl -X POST http://localhost:8800/api/movies \
     "original_language": "en",
     "genre_ids": [1, 2],
     "Actor_ids": [10, 11]
+  }'
+```
+
+### Update an Actor
+
+The API uses `PATCH` for updating existing actors.
+
+```bash
+curl -X PATCH "http://localhost:8800/api/actors/1?apikey=YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Leonardo DiCaprio",
+    "birthDate": "1974-11-11"
   }'
 ```
 
