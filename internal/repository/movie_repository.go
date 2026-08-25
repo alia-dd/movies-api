@@ -32,7 +32,7 @@ const (
 	getGenresIdBymovieIdQuery = `SELECT genreId FROM movie_genre WHERE movieId = ?`
 	getActorsIdBymovieIdQuery = `SELECT actorId FROM movie_actor WHERE movieId = ?`
 
-	patchMovieById = `UPDATE MOVIES SET updated_at = ? `
+	patchMovieById = `UPDATE MOVIES SET updated_at = ?`
 )
 
 type MovieRepository struct {

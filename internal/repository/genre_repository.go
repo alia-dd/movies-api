@@ -157,7 +157,7 @@ func (r *GenreRepository) UpdateGenre(cx context.Context, id int, name string) e
 	if rows == 0 {
 		return errors.ErrNotFound
 	}
-	return nil
+	return tx.Commit()
 }
 
 func (r *GenreRepository) DeleteGenre(cx context.Context, id int) error {
@@ -178,7 +178,7 @@ func (r *GenreRepository) DeleteGenre(cx context.Context, id int) error {
 	if rows == 0 {
 		return errors.ErrNotFound
 	}
-	return nil
+	return tx.Commit()
 }
 
 func (r *GenreRepository) DeleteGenreWithAssociations(cx context.Context, id int) error {
@@ -206,7 +206,7 @@ func (r *GenreRepository) DeleteGenreWithAssociations(cx context.Context, id int
 	if rows == 0 {
 		return errors.ErrNotFound
 	}
-	return nil
+	return tx.Commit()
 }
 
 func (r *GenreRepository) DeleteGenreByName(cx context.Context, name string) error {
@@ -227,7 +227,7 @@ func (r *GenreRepository) DeleteGenreByName(cx context.Context, name string) err
 	if rows == 0 {
 		return errors.ErrNotFound
 	}
-	return nil
+	return tx.Commit()
 }
 
 func (r *GenreRepository) DeleteGenreByNameWithAssociations(cx context.Context, name string) error {
@@ -262,5 +262,5 @@ func (r *GenreRepository) DeleteGenreByNameWithAssociations(cx context.Context, 
 	if rows == 0 {
 		return errors.ErrNotFound
 	}
-	return nil
+	return tx.Commit()
 }

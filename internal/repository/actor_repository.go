@@ -67,7 +67,7 @@ func (r *ActorsRepository) Update(ctx context.Context, actor *models.Actor) erro
 		return errors.ErrNotFound
 	}
 	actor.UpdatedAt = now
-	return nil
+	return tx.Commit()
 }
 
 func (r *ActorsRepository) FindById(ctx context.Context, id int) (*models.Actor, error) {
@@ -183,7 +183,7 @@ func (r *ActorsRepository) DeleteActorsById(ctx context.Context, id int, force b
 	if rowsDeleted == 0 {
 		return errors.ErrNotFound
 	}
-	return nil
+	return tx.Commit()
 }
 
 // not needed because if we have multiple actors with the same name, it doesn't know which one to delete
@@ -231,5 +231,5 @@ func (r *ActorsRepository) DeleteActorsByName(ctx context.Context, name string, 
 	if rowsDeleted == 0 {
 		return errors.ErrNotFound
 	}
-	return nil
+	return tx.Commit()
 }
