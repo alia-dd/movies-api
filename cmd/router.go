@@ -20,7 +20,7 @@ type dbData struct {
 
 func route() (http.Handler, error) {
 	seed := flag.Bool("s", false, "Use flag -s to Seed the Database.")
-	generate := flag.String("g", "", "Use flag -g to Generate the ApiKey.")
+	generate := flag.String("g", "", "Use flag -g [owner name] to Generate the ApiKey.")
 
 	flag.Parse()
 	mux := http.NewServeMux()
@@ -46,7 +46,7 @@ func route() (http.Handler, error) {
 		if err != nil {
 			return nil, err
 		}
-		fmt.Println(key)
+		fmt.Printf("\n\033[4;32mAPIKEY:\n\033[4;36m%s\n\033[0;37m", key)
 	}
 
 	//actor routes
@@ -99,6 +99,7 @@ func Middleware(db *sql.DB, handler http.HandlerFunc) http.HandlerFunc {
 				http.Error(w, errors.ErrServerErr.Error(), http.StatusInternalServerError)
 			}
 		}()
+		// checkes if the apikey is valid
 		key := strings.TrimSpace(r.URL.Query().Get("apikey"))
 		if found := database.GetApiKey(db, key); !found {
 			http.Error(w, errors.ErrWrongApiKey.Error(), http.StatusBadRequest)

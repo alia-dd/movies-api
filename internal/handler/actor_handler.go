@@ -134,7 +134,6 @@ func (h *ActorHandler) GetActorByName(w http.ResponseWriter, r *http.Request) {
 	cx := r.Context()
 
 	name := strings.TrimSpace(r.URL.Query().Get("name"))
-
 	actor, err := h.service.FindByName(cx, name)
 
 	if err == sql.ErrNoRows {

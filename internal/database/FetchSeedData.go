@@ -68,6 +68,8 @@ func FetchSeedData() {
 	nextGenreID := 1
 	nextActorID := 1
 
+	// we fetch all of the genres since there aren't many and save it in a map
+	// with the original ganre ID as a key to map it to the movies fetched from the api
 	//  --url 'https://api.themoviedb.org/3/genre/movie/list?language=en' \
 	urlG := fmt.Sprintf("https://api.themoviedb.org/3/genre/movie/list?api_key=%s", apiKey)
 	bodyG := ResponsData(urlG)
@@ -98,6 +100,9 @@ func FetchSeedData() {
 			movieGenres := []int{}
 			movieActors := []int{}
 
+			// this maped the genre with the movie using the genre.id
+			// while also giving it a new incrementing id if its new to the allGenre which holds
+			// all of the officaily registred id
 			for _, genreId := range movie.GenreIDs {
 				genreData, ok := allGenres[genreId]
 				if !ok {
@@ -113,6 +118,7 @@ func FetchSeedData() {
 			if len(TMDBActorResp.Cast) == 0 {
 				continue
 			}
+
 			for _, actor := range TMDBActorResp.Cast {
 				actorData, ok := allActors[actor.ID]
 				if !ok {
@@ -123,8 +129,10 @@ func FetchSeedData() {
 					if person.KnownFor != "Acting" {
 						continue
 					}
+					// the person data doesn't come with a birthdate sometime with can couse a unique contrain
+					// for the name of the actor so we generate random birthdate with actors age 10 to 80
 					if person.BirthDate == "" {
-						year := time.Now().Year() - rand.Intn(50)
+						year := time.Now().Year() - (rand.Intn(80) + 10)
 						month := rand.Intn(12) + 1
 						day := rand.Intn(28) + 1
 						person.BirthDate = fmt.Sprintf("%04d-%02d-%02d", year, month, day)
@@ -169,6 +177,8 @@ func FetchSeedData() {
 		return
 	}
 
+	// we're soring the genre and movie map so that when we add it to the db table its in order we want
+	// and we can use hte ids we have
 	var genreList []TMDGenre
 	for _, g := range allGenres {
 		genreList = append(genreList, g)

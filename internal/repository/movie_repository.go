@@ -114,6 +114,7 @@ func (r *MovieRepository) Get(cx context.Context, f *models.Filter) ([]models.Mo
 			return nil, 0, err
 		}
 
+		//format the duration which is currently in minust to (h min)
 		duration := formatDurations(movie.Duration)
 		movies = append(movies, models.MoviesDisplay{
 			Id:               movie.Id,
@@ -130,6 +131,7 @@ func (r *MovieRepository) Get(cx context.Context, f *models.Filter) ([]models.Mo
 		return nil, 0, err
 	}
 
+	// this adds the actors/genre names to the payload
 	for i := range movies {
 		movieActors, _ := r.GetActorsForMovie(cx, movies[i].Id)
 		movieGenres, _ := r.GetGenresForMovie(cx, movies[i].Id)

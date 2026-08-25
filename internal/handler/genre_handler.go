@@ -178,7 +178,7 @@ func (h *GenreHandler) UpdateGenre(w http.ResponseWriter, r *http.Request) {
 
 	err = h.genreService.UpdateGenre(cx, id, updateData.Name)
 	if err != nil {
-		if err.Error() == "record not found" {
+		if err.Error() == "Record not found" {
 			http.Error(w, "Genre not found", http.StatusNotFound)
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -206,7 +206,7 @@ func (h *GenreHandler) DeleteGenreByID(w http.ResponseWriter, r *http.Request) {
 
 	err = h.genreService.DeleteGenreByID(cx, id, force)
 	if err != nil {
-		if err.Error() == "record not found" {
+		if err.Error() == "Record not found" {
 			http.Error(w, "Genre not found", http.StatusNotFound)
 			return
 		}
@@ -233,7 +233,7 @@ func (h *GenreHandler) DeleteGenreByName(w http.ResponseWriter, r *http.Request)
 
 	err := h.genreService.DeleteGenreByName(cx, name, force)
 	if err != nil {
-		if err.Error() == "record not found" {
+		if err.Error() == "Record not found" {
 			http.Error(w, "Genre not found", http.StatusNotFound)
 			return
 		}

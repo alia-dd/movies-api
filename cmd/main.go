@@ -18,6 +18,6 @@ func main() {
 		fmt.Println(err)
 		return
 	}
+	fmt.Printf("\033[0;32mserver running on localhost %s \033[0;37m\n", port)
 	log.Fatal(http.ListenAndServe(port, srv))
-	fmt.Println("server running on localhost", port)
 }

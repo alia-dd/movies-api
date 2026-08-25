@@ -75,6 +75,15 @@ type MovieSeed struct {
 	Results []models.Movies `json:"results"`
 }
 
+type actorSeed struct {
+	ID         int    `json:"id"`
+	Name       string `json:"name"`
+	Character  string `json:"character"`
+	PersonInfo struct {
+		BirthDate string `json:"birthday"`
+	} `json:"Person_Info"`
+}
+
 func InitializeMovieTable(db *sql.DB) error {
 	if _, err := db.Exec(scheme); err != nil {
 		return fmt.Errorf("failed to create table: %w", err)
@@ -82,20 +91,11 @@ func InitializeMovieTable(db *sql.DB) error {
 
 	return nil
 }
-func tableExist(db *sql.DB) bool {
-	var count int
-	query := `SELECT count(*) FROM sqlite_master WHERE name ='MOVIES' and type='table'`
-	err := db.QueryRow(query).Scan(&count)
-	if err != nil || count <= 0 {
-		return false
-	}
-	return true
-}
 
 func SeedData(db *sql.DB) error {
 	cx := context.Background()
 
-	var actors []*models.Actor
+	var actors []actorSeed
 	var genres []*models.Genre
 	var movies []models.Movies
 	mr := repository.NewMovieRepository(db)
@@ -116,9 +116,17 @@ func SeedData(db *sql.DB) error {
 	if err := json.Unmarshal(actorBody, &actors); err != nil {
 		return fmt.Errorf("failed to unmarshal actor seed data: %w", err)
 	}
-	for _, actor := range actors {
+	for _, actorseed := range actors {
+		actor := &models.Actor{
+			Id:        actorseed.ID,
+			Name:      actorseed.Name,
+			BirthDate: actorseed.PersonInfo.BirthDate,
+		}
 		if err := ar.CreateActor(cx, actor); err != nil {
-			return fmt.Errorf("failed to seed movie %q: %w", actor.Name, err)
+			// if strings.Contains(err.Error(), errors.ErrDuplicateKey.Error()) {
+			// 	continue
+			// }
+			return fmt.Errorf("failed to seed actor %q: %w", actor.Name, err)
 		}
 	}
 
@@ -176,14 +184,15 @@ func clearTables(cx context.Context, db *sql.DB) error {
 
 func GenerateApiKey(db *sql.DB, user *string) (string, error) {
 	query := `INSERT INTO APIKEY (user, key)VALUES (?, ?)`
-	//generate 32 bit random string
+	//generates 32 bit random string
 	key := make([]byte, 32)
 	if _, err := rand.Read(key); err != nil {
 		return "", err
 	}
 
-	//hash the random bit string for security
+	//hashes the random bit string for security
 	hashKey := sha256.Sum256(key)
+	//converts the hash bit to readable string
 	hashHex := hex.EncodeToString(hashKey[:])
 
 	_, err := db.Exec(query, user, hashHex)
@@ -191,6 +200,7 @@ func GenerateApiKey(db *sql.DB, user *string) (string, error) {
 		return "", err
 	}
 
+	// return the unhashed hep with the prefix specified for the current user
 	fullKey := ApiPreFix + "_" + hex.EncodeToString(key)
 	return fullKey, nil
 }
@@ -205,7 +215,9 @@ func GetApiKey(db *sql.DB, key string) bool {
 
 	query := `SELECT count(*) FROM APIKEY WHERE key = ?`
 
+	//hashes the random bit string for security
 	hashKey := sha256.Sum256(secret)
+	//converts the hash bit to readable string
 	hashHex := hex.EncodeToString(hashKey[:])
 
 	apiErr := db.QueryRow(query, hashHex).Scan(&count)
