@@ -200,7 +200,36 @@ curl -X POST http://localhost:8800/api/movies \
     "Actor_ids": [10, 11]
   }'
 ```
+### Update a movie
 
+The API uses `PATCH` to partially update a movie. You only need to include the fields you want to change.
+
+For example, to update the title and duration:
+
+```bash
+curl -X PATCH "http://localhost:8800/api/movies/1?apikey=YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Inception Updated",
+    "duration": 150
+  }'
+```
+
+You can also update the movie's actors and genres using their IDs:
+
+```bash
+curl -X PATCH "http://localhost:8800/api/movies/1?apikey=YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Inception Updated",
+    "addActorIds": [10, 11],
+    "removeActorIds": [5],
+    "addGenreIds": [2],
+    "removeGenreIds": [4]
+  }'
+```
+
+Because this endpoint uses `PATCH`, you do not need to provide every movie field. Only the fields included in the request are changed.
 ### Update an Actor
 
 The API uses `PATCH` for updating existing actors.
