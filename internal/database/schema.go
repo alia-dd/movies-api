@@ -116,6 +116,7 @@ func SeedData(db *sql.DB) error {
 	if err := json.Unmarshal(actorBody, &actors); err != nil {
 		return fmt.Errorf("failed to unmarshal actor seed data: %w", err)
 	}
+<<<<<<< HEAD
 	for _, actorseed := range actors {
 		actor := &models.Actor{
 			Id:        actorseed.ID,
@@ -127,6 +128,11 @@ func SeedData(db *sql.DB) error {
 			// 	continue
 			// }
 			return fmt.Errorf("failed to seed actor %q: %w", actor.Name, err)
+=======
+	for _, actor := range actors {
+		if err := ar.CreateActor(cx, actor); err != nil {
+			return fmt.Errorf("failed to seed movie %q: %w", actor.Name, err)
+>>>>>>> main
 		}
 	}
 

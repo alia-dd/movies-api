@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"movies-api/internal/errors"
@@ -19,12 +20,17 @@ func NewActorRepository(db *sql.DB) *ActorsRepository {
 	}
 }
 
-func (r *ActorsRepository) CreateActor(actor *models.Actor) error {
+func (r *ActorsRepository) CreateActor(ctx context.Context, actor *models.Actor) error {
+	tx, txErr := r.db.BeginTx(ctx, nil)
+	if txErr != nil {
+		return errors.ErrTransactionStart
+	}
+	defer tx.Rollback() // if there is error revert changes to the db back to before the changes
 
 	query := `INSERT INTO actors(name, birthdate) VALUES(?,?)`
 
 	now := time.Now()
-	result, err := r.db.Exec(query, actor.Name, actor.BirthDate)
+	result, err := tx.ExecContext(ctx, query, actor.Name, actor.BirthDate)
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
 			return errors.ErrDuplicateKey
@@ -38,13 +44,18 @@ func (r *ActorsRepository) CreateActor(actor *models.Actor) error {
 	actor.Id = int(id)
 	actor.CreatedAt = now
 	actor.UpdatedAt = now
-	return nil
+	return tx.Commit()
 }
 
-func (r *ActorsRepository) Update(actor *models.Actor) error {
+func (r *ActorsRepository) Update(ctx context.Context, actor *models.Actor) error {
+	tx, txErr := r.db.BeginTx(ctx, nil)
+	if txErr != nil {
+		return errors.ErrTransactionStart
+	}
+	defer tx.Rollback() // if there is error revert changes to the db back to before the changes
 	query := `UPDATE actors	SET name = ?, birthdate = ?, updated_at = ?	WHERE id = ?`
 	now := time.Now()
-	result, err := r.db.Exec(query, actor.Name, actor.BirthDate, now, actor.Id)
+	result, err := tx.ExecContext(ctx, query, actor.Name, actor.BirthDate, now, actor.Id)
 	if err != nil {
 		return err
 	}
@@ -56,14 +67,14 @@ func (r *ActorsRepository) Update(actor *models.Actor) error {
 		return errors.ErrNotFound
 	}
 	actor.UpdatedAt = now
-	return nil
+	return tx.Commit()
 }
 
-func (r *ActorsRepository) FindById(id int) (*models.Actor, error) {
+func (r *ActorsRepository) FindById(ctx context.Context, id int) (*models.Actor, error) {
 	query := `SELECT id,name,birthdate FROM actors WHERE id = ?`
 	actor := &models.Actor{}
 
-	err := r.db.QueryRow(query, id).Scan(
+	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&actor.Id,
 		&actor.Name,
 		&actor.BirthDate,
@@ -77,11 +88,11 @@ func (r *ActorsRepository) FindById(id int) (*models.Actor, error) {
 	return actor, nil
 }
 
-func (r *ActorsRepository) FindByName(name string) (*models.Actor, error) {
+func (r *ActorsRepository) FindByName(ctx context.Context, name string) (*models.Actor, error) {
 	query := `SELECT id,name,birthdate FROM actors WHERE name = ?`
 	actor := &models.Actor{}
 
-	err := r.db.QueryRow(query, name).Scan(
+	err := r.db.QueryRowContext(ctx, query, name).Scan(
 		&actor.Id,
 		&actor.Name,
 		&actor.BirthDate,
@@ -95,13 +106,13 @@ func (r *ActorsRepository) FindByName(name string) (*models.Actor, error) {
 	return actor, nil
 }
 
-func (r *ActorsRepository) GetAllActors(page, limit int) ([]models.Actor, int, error) {
+func (r *ActorsRepository) GetAllActors(ctx context.Context, page, limit int) ([]models.Actor, int, error) {
 	offset := (page - 1) * limit
 	query := `SELECT * FROM actors LIMIT ? OFFSET ?`
 	var total int
 	count := `SELECT COUNT(*) FROM actors`
-	r.db.QueryRow(count).Scan(&total)
-	rows, err := r.db.Query(query, limit, offset)
+	r.db.QueryRowContext(ctx, count).Scan(&total)
+	rows, err := r.db.QueryContext(ctx, query, limit, offset)
 
 	if err != nil {
 		return nil, total, err
@@ -127,20 +138,21 @@ func (r *ActorsRepository) GetAllActors(page, limit int) ([]models.Actor, int, e
 	return actors, total, err
 }
 
-func (r *ActorsRepository) DeleteActorsById(id int, force bool) error {
+func (r *ActorsRepository) DeleteActorsById(ctx context.Context, id int, force bool) error {
+	tx, txErr := r.db.BeginTx(ctx, nil)
+	if txErr != nil {
+		return errors.ErrTransactionStart
+	}
+	defer tx.Rollback() // if there is error revert changes to the db back to before the changes
 	// checking if the actor exists
 	var name string
-	err := r.db.QueryRow(
-		"SELECT name FROM actors WHERE id = ?", id,
-	).Scan(&name)
+	err := tx.QueryRowContext(ctx, "SELECT name FROM actors WHERE id = ?", id).Scan(&name)
 	if err != nil {
 		return errors.ErrNotFound
 	}
 	// checking if the actor is related to any movies
 	var count int
-	err = r.db.QueryRow(
-		"SELECT COUNT(*) FROM movie_actor WHERE actorId = ?", id,
-	).Scan(&count)
+	err = tx.QueryRowContext(ctx, "SELECT COUNT(*) FROM movie_actors WHERE actor_id = ?", id).Scan(&count)
 
 	if err != nil {
 		return err
@@ -151,7 +163,7 @@ func (r *ActorsRepository) DeleteActorsById(id int, force bool) error {
 	}
 	// removing the relation first
 	if force {
-		_, err := r.db.Exec(`DELETE FROM movie_actor WHERE actorId = ?`, id)
+		_, err := tx.ExecContext(ctx, `DELETE FROM movie_actors WHERE actor_id = ?`, id)
 		if err != nil {
 			return err
 		}
@@ -160,7 +172,7 @@ func (r *ActorsRepository) DeleteActorsById(id int, force bool) error {
 	query := `
 	DELETE FROM actors WHERE id = ?`
 
-	result, err := r.db.Exec(query, id)
+	result, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {
 		return err
 	}
@@ -171,24 +183,25 @@ func (r *ActorsRepository) DeleteActorsById(id int, force bool) error {
 	if rowsDeleted == 0 {
 		return errors.ErrNotFound
 	}
-	return nil
+	return tx.Commit()
 }
 
 // not needed because if we have multiple actors with the same name, it doesn't know which one to delete
-func (r *ActorsRepository) DeleteActorsByName(name string, force bool) error {
+func (r *ActorsRepository) DeleteActorsByName(ctx context.Context, name string, force bool) error {
+	tx, txErr := r.db.BeginTx(ctx, nil)
+	if txErr != nil {
+		return errors.ErrTransactionStart
+	}
+	defer tx.Rollback() // if there is error revert changes to the db back to before the changes
 	// checking if the actor exists by exracting the name using Id
 	var id int
-	err := r.db.QueryRow(
-		"SELECT id FROM actors WHERE name = ?", name,
-	).Scan(&id)
+	err := tx.QueryRowContext(ctx, "SELECT id FROM actors WHERE name = ?", name).Scan(&id)
 	if err != nil {
 		return errors.ErrNotFound
 	}
 	// checking if the actor is related to any movies
 	var count int
-	err = r.db.QueryRow(
-		"SELECT COUNT(*) FROM movie_actor WHERE actorId = ?", id,
-	).Scan(&count)
+	err = tx.QueryRowContext(ctx, "SELECT COUNT(*) FROM movie_actors WHERE actor_id = ?", id).Scan(&count)
 
 	if err != nil {
 		return err
@@ -199,7 +212,7 @@ func (r *ActorsRepository) DeleteActorsByName(name string, force bool) error {
 	}
 	// removing the relation first
 	if force {
-		_, err := r.db.Exec(`DELETE FROM movie_actor WHERE actorId = ?`, id)
+		_, err := tx.Exec(`DELETE FROM movie_actors WHERE actor_id = ?`, id)
 		if err != nil {
 			return err
 		}
@@ -207,7 +220,7 @@ func (r *ActorsRepository) DeleteActorsByName(name string, force bool) error {
 	// delete the actor
 	query := `DELETE FROM actors WHERE id = ?`
 
-	result, err := r.db.Exec(query, id)
+	result, err := tx.ExecContext(ctx, query, id)
 	if err != nil {
 		return err
 	}
@@ -218,5 +231,5 @@ func (r *ActorsRepository) DeleteActorsByName(name string, force bool) error {
 	if rowsDeleted == 0 {
 		return errors.ErrNotFound
 	}
-	return nil
+	return tx.Commit()
 }

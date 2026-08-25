@@ -22,7 +22,7 @@ func NewActorHandler(service *service.ActorService) *ActorHandler {
 }
 
 func (h *ActorHandler) CreateActor(w http.ResponseWriter, r *http.Request) {
-
+	cx := r.Context()
 	var actor models.Actor
 
 	err := json.NewDecoder(r.Body).Decode(&actor)
@@ -30,7 +30,7 @@ func (h *ActorHandler) CreateActor(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid JSON", http.StatusBadRequest)
 		return
 	}
-	err = h.service.CreateActor(&actor)
+	err = h.service.CreateActor(cx, &actor)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -41,6 +41,8 @@ func (h *ActorHandler) CreateActor(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ActorHandler) UpdateActor(w http.ResponseWriter, r *http.Request) {
+	cx := r.Context()
+
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
 		http.Error(w, "invalid actor id", http.StatusBadRequest)
@@ -54,7 +56,7 @@ func (h *ActorHandler) UpdateActor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	actor.Id = id
-	err = h.service.UpdateActor(&actor)
+	err = h.service.UpdateActor(cx, &actor)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -65,6 +67,8 @@ func (h *ActorHandler) UpdateActor(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ActorHandler) GetAllActors(w http.ResponseWriter, r *http.Request) {
+	cx := r.Context()
+
 	pageStr := r.URL.Query().Get("page")
 	limitStr := r.URL.Query().Get("limit")
 
@@ -88,7 +92,7 @@ func (h *ActorHandler) GetAllActors(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "page and limit must be greater than 0", http.StatusBadRequest)
 		return
 	}
-	actors, total, err := h.service.GetAllActors(page, limit)
+	actors, total, err := h.service.GetAllActors(cx, page, limit)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -107,13 +111,14 @@ func (h *ActorHandler) GetAllActors(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ActorHandler) GetActorsById(w http.ResponseWriter, r *http.Request) {
+	cx := r.Context()
 
 	Id, errId := strconv.Atoi(r.PathValue("id"))
 	if errId != nil {
 		http.Error(w, "Invalid actor id", http.StatusBadRequest)
 		return
 	}
-	actors, err := h.service.FindById(Id)
+	actors, err := h.service.FindById(cx, Id)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -126,10 +131,11 @@ func (h *ActorHandler) GetActorsById(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ActorHandler) GetActorByName(w http.ResponseWriter, r *http.Request) {
+	cx := r.Context()
 
 	name := strings.TrimSpace(r.URL.Query().Get("name"))
 
-	actor, err := h.service.FindByName(name)
+	actor, err := h.service.FindByName(cx, name)
 
 	if err == sql.ErrNoRows {
 		http.Error(w, errors.ErrNotFound.Error(), http.StatusNotFound)
@@ -145,6 +151,7 @@ func (h *ActorHandler) GetActorByName(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ActorHandler) DeleteActorsById(w http.ResponseWriter, r *http.Request) {
+	cx := r.Context()
 
 	Id, errId := strconv.Atoi(r.PathValue("id"))
 	if errId != nil {
@@ -152,7 +159,7 @@ func (h *ActorHandler) DeleteActorsById(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	force := r.URL.Query().Get("force") == "true"
-	err := h.service.DeleteActorsById(Id, force)
+	err := h.service.DeleteActorsById(cx, Id, force)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -160,10 +167,11 @@ func (h *ActorHandler) DeleteActorsById(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(http.StatusNoContent)
 }
 func (h *ActorHandler) DeleteActorsByName(w http.ResponseWriter, r *http.Request) {
+	cx := r.Context()
 
 	name := r.PathValue("name")
 	force := r.URL.Query().Get("force") == "true"
-	err := h.service.DeleteActorsByName(name, force)
+	err := h.service.DeleteActorsByName(cx, name, force)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
