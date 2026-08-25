@@ -26,6 +26,6 @@ func InitializeDB(dbName string) (*sql.DB, error) {
 		return nil, fmt.Errorf("Failed to ping database: %w", errPing)
 	}
 
-	log.Printf("Successfully connected to %s database", dbName)
+	log.Printf("\033[0;32mSuccessfully connected to %s database\033[0;37m", dbName)
 	return db, nil
 }

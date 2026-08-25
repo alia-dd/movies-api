@@ -3,7 +3,6 @@ package handler
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"movies-api/internal/errors"
 	"movies-api/internal/models"
 	"movies-api/internal/service"
@@ -40,7 +39,6 @@ func (h *Handler) GetAllMovies(w http.ResponseWriter, r *http.Request) {
 
 	page, _ := strconv.Atoi(f.Page)
 	size, _ := strconv.Atoi(f.Size)
-	fmt.Println("ger4", page, size, f.Size)
 	jsonData, err := json.Marshal(map[string]interface{}{
 		"pagination": map[string]int{
 			"page":        page,
@@ -51,7 +49,6 @@ func (h *Handler) GetAllMovies(w http.ResponseWriter, r *http.Request) {
 		"data": payload,
 	})
 	if err != nil {
-		fmt.Println(err)
 		http.Error(w, errors.ErrorMarshel.Error(), http.StatusAccepted)
 		return
 	}
@@ -135,7 +132,6 @@ func (h *Handler) CreateMovie(w http.ResponseWriter, r *http.Request) {
 	var movie models.Movies
 	jsonErr := json.NewDecoder(r.Body).Decode(&movie)
 	if jsonErr != nil {
-		fmt.Println(jsonErr)
 		http.Error(w, errors.ErrInvalidInput.Error(), http.StatusBadRequest)
 		return
 	}
@@ -172,7 +168,6 @@ func (h *Handler) UpdateMovie(w http.ResponseWriter, r *http.Request) {
 	var movie models.MovieUpdate
 	jsonErr := json.NewDecoder(r.Body).Decode(&movie)
 	if jsonErr != nil {
-		fmt.Println(jsonErr)
 		http.Error(w, errors.ErrInvalidInput.Error(), http.StatusBadRequest)
 		return
 	}
