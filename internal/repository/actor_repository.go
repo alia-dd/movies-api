@@ -89,9 +89,9 @@ func (r *ActorsRepository) FindById(ctx context.Context, id int) (*models.Actor,
 }
 
 func (r *ActorsRepository) FindByName(ctx context.Context, name string) (*models.Actor, error) {
-	query := `SELECT id,name,birthdate FROM actors WHERE name = ?`
-	actor := &models.Actor{}
+	query := `SELECT id,name,birthdate FROM actors WHERE name LIKE ?`
 
+	actor := &models.Actor{}
 	err := r.db.QueryRowContext(ctx, query, name).Scan(
 		&actor.Id,
 		&actor.Name,
@@ -152,7 +152,7 @@ func (r *ActorsRepository) DeleteActorsById(ctx context.Context, id int, force b
 	}
 	// checking if the actor is related to any movies
 	var count int
-	err = tx.QueryRowContext(ctx, "SELECT COUNT(*) FROM movie_actors WHERE actor_id = ?", id).Scan(&count)
+	err = tx.QueryRowContext(ctx, "SELECT COUNT(*) FROM movie_actor WHERE actorId = ?", id).Scan(&count)
 
 	if err != nil {
 		return err
@@ -163,7 +163,7 @@ func (r *ActorsRepository) DeleteActorsById(ctx context.Context, id int, force b
 	}
 	// removing the relation first
 	if force {
-		_, err := tx.ExecContext(ctx, `DELETE FROM movie_actors WHERE actor_id = ?`, id)
+		_, err := tx.ExecContext(ctx, `DELETE FROM movie_actor WHERE actorId = ?`, id)
 		if err != nil {
 			return err
 		}
@@ -172,7 +172,7 @@ func (r *ActorsRepository) DeleteActorsById(ctx context.Context, id int, force b
 	query := `
 	DELETE FROM actors WHERE id = ?`
 
-	result, err := r.db.ExecContext(ctx, query, id)
+	result, err := tx.ExecContext(ctx, query, id)
 	if err != nil {
 		return err
 	}
@@ -201,7 +201,7 @@ func (r *ActorsRepository) DeleteActorsByName(ctx context.Context, name string, 
 	}
 	// checking if the actor is related to any movies
 	var count int
-	err = tx.QueryRowContext(ctx, "SELECT COUNT(*) FROM movie_actors WHERE actor_id = ?", id).Scan(&count)
+	err = tx.QueryRowContext(ctx, "SELECT COUNT(*) FROM movie_actor WHERE actorId = ?", id).Scan(&count)
 
 	if err != nil {
 		return err
@@ -212,7 +212,7 @@ func (r *ActorsRepository) DeleteActorsByName(ctx context.Context, name string, 
 	}
 	// removing the relation first
 	if force {
-		_, err := tx.Exec(`DELETE FROM movie_actors WHERE actor_id = ?`, id)
+		_, err := tx.Exec(`DELETE FROM movie_actor WHERE actorId = ?`, id)
 		if err != nil {
 			return err
 		}

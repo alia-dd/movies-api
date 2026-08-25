@@ -116,23 +116,17 @@ func SeedData(db *sql.DB) error {
 	if err := json.Unmarshal(actorBody, &actors); err != nil {
 		return fmt.Errorf("failed to unmarshal actor seed data: %w", err)
 	}
-<<<<<<< HEAD
 	for _, actorseed := range actors {
 		actor := &models.Actor{
 			Id:        actorseed.ID,
 			Name:      actorseed.Name,
 			BirthDate: actorseed.PersonInfo.BirthDate,
 		}
-		if err := ar.CreateActor(actor); err != nil {
+		if err := ar.CreateActor(cx, actor); err != nil {
 			// if strings.Contains(err.Error(), errors.ErrDuplicateKey.Error()) {
 			// 	continue
 			// }
 			return fmt.Errorf("failed to seed actor %q: %w", actor.Name, err)
-=======
-	for _, actor := range actors {
-		if err := ar.CreateActor(cx, actor); err != nil {
-			return fmt.Errorf("failed to seed movie %q: %w", actor.Name, err)
->>>>>>> main
 		}
 	}
 

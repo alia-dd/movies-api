@@ -1,0 +1,1249 @@
+{
+  "info": {
+    "_postman_id": "0005394a-d324-4176-a428-837920376bce",
+    "name": "Movie Database API generated",
+    "description": "Collection for the Go Movies API: movies, actors, and genres. Every request uses an `apikey` query parameter, stored as the collection variable `{{apikey}}`. Generate a key with your server's `-genkey` flow (or however GenerateApiKey is exposed) and paste it into the collection variables before running requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "47541231"
+  },
+  "item": [
+    {
+      "name": "Movies",
+      "item": [
+        {
+          "name": "Get all movies",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/movies?apikey={{apikey}}&page=1&size=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "movies"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get all movies - large page size",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/movies?apikey={{apikey}}&page=1&size=199",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "movies"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "199"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Filter movies by genre",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/movies?apikey={{apikey}}&genre=Action",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "movies"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                },
+                {
+                  "key": "genre",
+                  "value": "Action"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Filter movies by actor",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/movies?apikey={{apikey}}&actor=Tom Hanks",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "movies"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                },
+                {
+                  "key": "actor",
+                  "value": "Tom Hanks"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Filter movies by year",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/movies?apikey={{apikey}}&year=1994",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "movies"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                },
+                {
+                  "key": "year",
+                  "value": "1994"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get movie by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/movies/{{movieId}}?apikey={{apikey}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "movies",
+                "{{movieId}}"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get movie by title",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/movies/spider-man?apikey={{apikey}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "movies",
+                "spider-man"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get movie by id - not found (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/movies/999999?apikey={{apikey}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "movies",
+                "999999"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get actors for movie",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/movies/{{movieId}}/actors?apikey={{apikey}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "movies",
+                "{{movieId}}",
+                "actors"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get genres for movie",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/movies/{{movieId}}/genres?apikey={{apikey}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "movies",
+                "{{movieId}}",
+                "genres"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create movie (with genres and actors)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Inception\",\n  \"release_date\": \"2010\",\n  \"duration\": 148,\n  \"overview\": \"A thief who steals corporate secrets through dream-sharing technology.\",\n  \"original_language\": \"en\",\n  \"genre_ids\": [1, 2],\n  \"Actor_ids\": [1, 2]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/movies?apikey={{apikey}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "movies"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create movie - invalid data (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"\",\n  \"release_date\": \"2010\",\n  \"duration\": 148\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/movies?apikey={{apikey}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "movies"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update movie - add/remove actors",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"addActorIds\": [3, 4],\n  \"removeActorIds\": [1]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/movies/{{movieId}}?apikey={{apikey}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "movies",
+                "{{movieId}}"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update movie - id is immutable",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": 999,\n  \"title\": \"Attempted id change\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/movies/{{movieId}}?apikey={{apikey}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "movies",
+                "{{movieId}}"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete movie (blocked - has associations, 400)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/movies/{{movieId}}?apikey={{apikey}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "movies",
+                "{{movieId}}"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Force delete movie (removes associations too)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/movies/{{movieId}}?apikey={{apikey}}&force=true",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "movies",
+                "{{movieId}}"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                },
+                {
+                  "key": "force",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Actors",
+      "item": [
+        {
+          "name": "Get all actors",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/actors?apikey={{apikey}}&page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "actors"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get actor by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/actors/{{actorId}}?apikey={{apikey}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "actors",
+                "{{actorId}}"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get actor by id - not found (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/actors/999999?apikey={{apikey}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "actors",
+                "999999"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get actor by name - lowercase",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/actors/name?name=tom hanks&apikey={{apikey}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "actors",
+                "name"
+              ],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "tom hanks"
+                },
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get actor by name - Title Case",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/actors/name?name=Tom Hanks&apikey={{apikey}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "actors",
+                "name"
+              ],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "Tom Hanks"
+                },
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get actor by name - UPPERCASE",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/actors/name?name=TOM HANKS&apikey={{apikey}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "actors",
+                "name"
+              ],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "TOM HANKS"
+                },
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create actor - valid birthDate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Leonardo DiCaprio\",\n  \"birthDate\": \"1974-11-11\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/actors?apikey={{apikey}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "actors"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create actor - invalid birthDate (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Invalid Date Actor\",\n  \"birthDate\": \"1990-13-32\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/actors?apikey={{apikey}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "actors"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update actor",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Leonardo Wilhelm DiCaprio\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/actors/{{actorId}}?apikey={{apikey}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "actors",
+                "{{actorId}}"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update actor - id is immutable",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": 999,\n  \"name\": \"Attempted id change\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/actors/{{actorId}}?apikey={{apikey}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "actors",
+                "{{actorId}}"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete actor by id",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/actors/{{actorId}}?apikey={{apikey}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "actors",
+                "{{actorId}}"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Force delete actor by id (removes from movies too)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/actors/{{actorId}}?apikey={{apikey}}&force=true",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "actors",
+                "{{actorId}}"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                },
+                {
+                  "key": "force",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete actor by name",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/actors/name/Leonardo DiCaprio?apikey={{apikey}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "actors",
+                "name",
+                "Leonardo DiCaprio"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Genres",
+      "item": [
+        {
+          "name": "Get all genres",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/genres?apikey={{apikey}}&page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "genres"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get genre by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/genres/{{genreId}}?apikey={{apikey}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "genres",
+                "{{genreId}}"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get genre by id - not found (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/genres/999999?apikey={{apikey}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "genres",
+                "999999"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Search genres by name",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/genres/search?apikey={{apikey}}&q=drama&page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "genres",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                },
+                {
+                  "key": "q",
+                  "value": "drama"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create genre",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sci-Fi\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/genres?apikey={{apikey}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "genres"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update genre",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Science Fiction\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/genres/{{genreId}}?apikey={{apikey}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "genres",
+                "{{genreId}}"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update genre - id is immutable",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": 999,\n  \"name\": \"Attempted id change\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/genres/{{genreId}}?apikey={{apikey}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "genres",
+                "{{genreId}}"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete genre (blocked - has associations, 400)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/genres/{{genreId}}?apikey={{apikey}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "genres",
+                "{{genreId}}"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Force delete genre (removes associations too)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/genres/{{genreId}}?apikey={{apikey}}&force=true",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "genres",
+                "{{genreId}}"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                },
+                {
+                  "key": "force",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete genre by name",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/genres/name/Sci-Fi?apikey={{apikey}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "genres",
+                "name",
+                "Sci-Fi"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "{{apikey}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "localhost:8800"
+    },
+    {
+      "key": "apikey",
+      "value": "test_api_65d3d8f2f897837c3bd33c6582f9a7e6f13f9e17cb5b45b5c321c7553265bbc3"
+    },
+    {
+      "key": "movieId",
+      "value": "1"
+    },
+    {
+      "key": "actorId",
+      "value": "1"
+    },
+    {
+      "key": "genreId",
+      "value": "1"
+    }
+  ]
+}
