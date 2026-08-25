@@ -16,7 +16,6 @@ func InitializeDB(dbName string) (*sql.DB, error) {
 	if dbErr != nil {
 		return nil, fmt.Errorf("Failed to open database: %w", dbErr)
 	}
-
 	db.SetMaxOpenConns(1) // SQLite supports only one writer at a time
 	db.SetMaxIdleConns(1)
 	db.SetConnMaxLifetime(time.Hour)

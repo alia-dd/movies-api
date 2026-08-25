@@ -117,10 +117,7 @@ func SeedData(db *sql.DB) error {
 		return fmt.Errorf("failed to unmarshal actor seed data: %w", err)
 	}
 	for _, actor := range actors {
-		if err := ar.CreateActor(actor); err != nil {
-			if strings.Contains(err.Error(), errors.ErrDuplicateKey.Error()) {
-				continue
-			}
+		if err := ar.CreateActor(cx, actor); err != nil {
 			return fmt.Errorf("failed to seed movie %q: %w", actor.Name, err)
 		}
 	}

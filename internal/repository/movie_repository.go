@@ -32,7 +32,7 @@ const (
 	getGenresIdBymovieIdQuery = `SELECT genreId FROM movie_genre WHERE movieId = ?`
 	getActorsIdBymovieIdQuery = `SELECT actorId FROM movie_actor WHERE movieId = ?`
 
-	patchMovieById = `UPDATE MOVIES SET updated_at = ? `
+	patchMovieById = `UPDATE MOVIES SET updated_at = ?`
 )
 
 type MovieRepository struct {
@@ -435,7 +435,7 @@ func (r *MovieRepository) GetActorsForMovie(cx context.Context, MovieId int) ([]
 	actorsId, _ := r.GetMovie_actor(cx, MovieId)
 
 	for _, actorid := range actorsId {
-		actor, err := actorRepo.FindById(actorid)
+		actor, err := actorRepo.FindById(cx, actorid)
 		if err != nil {
 			continue
 		}
