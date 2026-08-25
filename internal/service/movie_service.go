@@ -19,20 +19,20 @@ func NewMovieService(repo *repository.MovieRepository) *MovieService {
 	return &MovieService{repo: repo}
 }
 
-func (s *MovieService) GetMovie(cx context.Context, f models.Filter) ([]models.MoviesDisplay, int, error) {
+func (s *MovieService) GetMovie(cx context.Context, f *models.Filter) ([]models.MoviesDisplay, int, error) {
 	if f.Page != "" {
 		page, err := strconv.Atoi(f.Page)
-		if err != nil || page <= 0 {
+		if err != nil || page < 0 {
 			return nil, 0, errors.ErrInvalidInput
 		}
 	}
 	if f.Size != "" {
 		size, err := strconv.Atoi(f.Size)
-		if err != nil || size <= 0 {
+		if err != nil || size < 0 {
 			return nil, 0, errors.ErrInvalidInput
 		}
 	}
-	return s.repo.Get(cx, &f)
+	return s.repo.Get(cx, f)
 }
 
 func (s *MovieService) GetMovieById(cx context.Context, id int) (*models.MoviesDisplay, error) {

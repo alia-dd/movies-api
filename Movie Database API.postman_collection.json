@@ -1,0 +1,572 @@
+{
+  "info": {
+    "_postman_id": "cf4dce4f-c6cf-4406-9043-45b0da7e54f4",
+    "name": "Movie Database API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "47541231"
+  },
+  "item": [
+    {
+      "name": "tmdb api test",
+      "item": [
+        {
+          "name": "New Request",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://api.themoviedb.org/3/movie/popular?api_key=add63e21c755467e1763245167c231b4&page=1",
+              "protocol": "https",
+              "host": [
+                "api",
+                "themoviedb",
+                "org"
+              ],
+              "path": [
+                "3",
+                "movie",
+                "popular"
+              ],
+              "query": [
+                {
+                  "key": "api_key",
+                  "value": "add63e21c755467e1763245167c231b4"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://api.themoviedb.org/3/genre/movie/list?api_key=add63e21c755467e1763245167c231b4",
+              "protocol": "https",
+              "host": [
+                "api",
+                "themoviedb",
+                "org"
+              ],
+              "path": [
+                "3",
+                "genre",
+                "movie",
+                "list"
+              ],
+              "query": [
+                {
+                  "key": "api_key",
+                  "value": "add63e21c755467e1763245167c231b4"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://api.themoviedb.org/3/movie/27205/credits?api_key=add63e21c755467e1763245167c231b4",
+              "protocol": "https",
+              "host": [
+                "api",
+                "themoviedb",
+                "org"
+              ],
+              "path": [
+                "3",
+                "movie",
+                "27205",
+                "credits"
+              ],
+              "query": [
+                {
+                  "key": "api_key",
+                  "value": "add63e21c755467e1763245167c231b4"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://api.themoviedb.org/3/person/6193?api_key=add63e21c755467e1763245167c231b4",
+              "protocol": "https",
+              "host": [
+                "api",
+                "themoviedb",
+                "org"
+              ],
+              "path": [
+                "3",
+                "person",
+                "6193"
+              ],
+              "query": [
+                {
+                  "key": "api_key",
+                  "value": "add63e21c755467e1763245167c231b4"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "movie entity test",
+      "item": [
+        {
+          "name": "get all movie",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "localhost:8800/api/movies?apikey=test_api_65d3d8f2f897837c3bd33c6582f9a7e6f13f9e17cb5b45b5c321c7553265bbc3&year=2023",
+              "host": [
+                "localhost"
+              ],
+              "port": "8800",
+              "path": [
+                "api",
+                "movies"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "test_api_65d3d8f2f897837c3bd33c6582f9a7e6f13f9e17cb5b45b5c321c7553265bbc3"
+                },
+                {
+                  "key": "year",
+                  "value": "2023"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get movie by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "localhost:8800/api/movies/2?apikey=test_api_65d3d8f2f897837c3bd33c6582f9a7e6f13f9e17cb5b45b5c321c7553265bbc3",
+              "host": [
+                "localhost"
+              ],
+              "port": "8800",
+              "path": [
+                "api",
+                "movies",
+                "2"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "test_api_65d3d8f2f897837c3bd33c6582f9a7e6f13f9e17cb5b45b5c321c7553265bbc3"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get movie by title",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "localhost:8800/api/movies/spider-man?apikey=test_api_65d3d8f2f897837c3bd33c6582f9a7e6f13f9e17cb5b45b5c321c7553265bbc3",
+              "host": [
+                "localhost"
+              ],
+              "port": "8800",
+              "path": [
+                "api",
+                "movies",
+                "spider-man"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "test_api_65d3d8f2f897837c3bd33c6582f9a7e6f13f9e17cb5b45b5c321c7553265bbc3"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get actors for movie",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "localhost:8800/api/movies/4?apikey=test_api_65d3d8f2f897837c3bd33c6582f9a7e6f13f9e17cb5b45b5c321c7553265bbc3",
+              "host": [
+                "localhost"
+              ],
+              "port": "8800",
+              "path": [
+                "api",
+                "movies",
+                "4"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "test_api_65d3d8f2f897837c3bd33c6582f9a7e6f13f9e17cb5b45b5c321c7553265bbc3"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get Genres For Movie",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "localhost:8800/api/movies/4/genres?apikey=test_api_65d3d8f2f897837c3bd33c6582f9a7e6f13f9e17cb5b45b5c321c7553265bbc3",
+              "host": [
+                "localhost"
+              ],
+              "port": "8800",
+              "path": [
+                "api",
+                "movies",
+                "4",
+                "genres"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "test_api_65d3d8f2f897837c3bd33c6582f9a7e6f13f9e17cb5b45b5c321c7553265bbc3"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "post movie",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\t\"title\":\"The try2\",\n\t\"release_date\":\"2026\",\n\t\"duration\":148,\n    \"overview\":\"somthing\",\n    \"original_language\":\"-------------------\",\n    \"genre_ids\": [1,3,4],\n    \"Actor_ids\": [1,2,3,5,7]\n}\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8800/api/movies",
+              "host": [
+                "localhost"
+              ],
+              "port": "8800",
+              "path": [
+                "api",
+                "movies"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "localhost:8800/api/movies/199?force=true&apikey=test_api_65d3d8f2f897837c3bd33c6582f9a7e6f13f9e17cb5b45b5c321c7553265bbc3",
+              "host": [
+                "localhost"
+              ],
+              "port": "8800",
+              "path": [
+                "api",
+                "movies",
+                "199"
+              ],
+              "query": [
+                {
+                  "key": "force",
+                  "value": "true"
+                },
+                {
+                  "key": "apikey",
+                  "value": "test_api_65d3d8f2f897837c3bd33c6582f9a7e6f13f9e17cb5b45b5c321c7553265bbc3"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n\t\"title\":\"The try3\",\r\n\t\"release_date\":\"2026\",\r\n\t\"duration\":148,\r\n    \"overview\":\"en\",\r\n    \"original_language\":\"something new\",\r\n\r\n\r\n    \"addGenreIds\": [1],\r\n    \"removeGenreIds\": []\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8800/api/movies/gd",
+              "host": [
+                "localhost"
+              ],
+              "port": "8800",
+              "path": [
+                "api",
+                "movies",
+                "gd"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "actor entity test",
+      "item": [
+        {
+          "name": "get all actor",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "localhost:8800/api/actors?apikey=test_api_65d3d8f2f897837c3bd33c6582f9a7e6f13f9e17cb5b45b5c321c7553265bbc3&page=385&limit=20",
+              "host": [
+                "localhost"
+              ],
+              "port": "8800",
+              "path": [
+                "api",
+                "actors"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "test_api_65d3d8f2f897837c3bd33c6582f9a7e6f13f9e17cb5b45b5c321c7553265bbc3"
+                },
+                {
+                  "key": "page",
+                  "value": "385"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get actor by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "localhost:8800/api/actors/1?apikey=test_api_65d3d8f2f897837c3bd33c6582f9a7e6f13f9e17cb5b45b5c321c7553265bbc3",
+              "host": [
+                "localhost"
+              ],
+              "port": "8800",
+              "path": [
+                "api",
+                "actors",
+                "1"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "test_api_65d3d8f2f897837c3bd33c6582f9a7e6f13f9e17cb5b45b5c321c7553265bbc3"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get actor by title",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "localhost:8800/api/actors/name/Tom Holland?apikey=test_api_65d3d8f2f897837c3bd33c6582f9a7e6f13f9e17cb5b45b5c321c7553265bbc3",
+              "host": [
+                "localhost"
+              ],
+              "port": "8800",
+              "path": [
+                "api",
+                "actors",
+                "name",
+                "Tom Holland"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "test_api_65d3d8f2f897837c3bd33c6582f9a7e6f13f9e17cb5b45b5c321c7553265bbc3"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "post actor",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"death\",\n\t\"birthDate\" : \"9000-12-02\"\n}\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8800/api/actors?apikey=test_api_65d3d8f2f897837c3bd33c6582f9a7e6f13f9e17cb5b45b5c321c7553265bbc3",
+              "host": [
+                "localhost"
+              ],
+              "port": "8800",
+              "path": [
+                "api",
+                "actors"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "test_api_65d3d8f2f897837c3bd33c6582f9a7e6f13f9e17cb5b45b5c321c7553265bbc3"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "delete actor",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "localhost:8800/api/actors/7683?apikey=test_api_65d3d8f2f897837c3bd33c6582f9a7e6f13f9e17cb5b45b5c321c7553265bbc3",
+              "host": [
+                "localhost"
+              ],
+              "port": "8800",
+              "path": [
+                "api",
+                "actors",
+                "7683"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "test_api_65d3d8f2f897837c3bd33c6582f9a7e6f13f9e17cb5b45b5c321c7553265bbc3"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "delete actor by name",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "localhost:8800/api/actors/name/death?apikey=test_api_65d3d8f2f897837c3bd33c6582f9a7e6f13f9e17cb5b45b5c321c7553265bbc3",
+              "host": [
+                "localhost"
+              ],
+              "port": "8800",
+              "path": [
+                "api",
+                "actors",
+                "name",
+                "death"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "test_api_65d3d8f2f897837c3bd33c6582f9a7e6f13f9e17cb5b45b5c321c7553265bbc3"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "patch actor",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n\t\"name\": \"death door\",\r\n\t\"birthDate\" : \"9000-12-02\"\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "localhost:8800/api/actors/7683?apikey=test_api_65d3d8f2f897837c3bd33c6582f9a7e6f13f9e17cb5b45b5c321c7553265bbc3",
+              "host": [
+                "localhost"
+              ],
+              "port": "8800",
+              "path": [
+                "api",
+                "actors",
+                "7683"
+              ],
+              "query": [
+                {
+                  "key": "apikey",
+                  "value": "test_api_65d3d8f2f897837c3bd33c6582f9a7e6f13f9e17cb5b45b5c321c7553265bbc3"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

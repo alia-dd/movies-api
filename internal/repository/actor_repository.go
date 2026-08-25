@@ -126,6 +126,8 @@ func (r *ActorsRepository) GetAllActors(ctx context.Context, page, limit int) ([
 			&actor.Id,
 			&actor.Name,
 			&actor.BirthDate,
+			&actor.CreatedAt,
+			&actor.UpdatedAt,
 		)
 		if err != nil {
 			return nil, total, err
