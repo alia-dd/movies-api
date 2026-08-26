@@ -61,7 +61,7 @@ func (h *ActorHandler) UpdateActor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	actor, err := h.service.FindById(cx, id)
-	if err != nil{
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 	w.Header().Set("Content-type", "application/json")

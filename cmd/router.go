@@ -4,12 +4,14 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
+	"log"
 	"movies-api/internal/database"
 	"movies-api/internal/errors"
 	"movies-api/internal/handler"
 	"movies-api/internal/repository"
 	"movies-api/internal/service"
 	"net/http"
+	"runtime/debug"
 	"strings"
 )
 
@@ -55,7 +57,7 @@ func route() (http.Handler, error) {
 	actorHandler := handler.NewActorHandler(actorService)
 
 	mux.HandleFunc("POST /api/actors", Middleware(db, actorHandler.CreateActor))
-	mux.HandleFunc("PATCH /api/actors/{id}", Middleware(db, actorHandler.UpdateActor))
+	mux.HandleFunc("PATCH /api/actors/{id}", actorHandler.UpdateActor)
 	mux.HandleFunc("GET /api/actors", Middleware(db, actorHandler.GetAllActors))
 	mux.HandleFunc("GET /api/actors/{id}", Middleware(db, actorHandler.GetActorsById))
 	mux.HandleFunc("GET /api/actors/name", Middleware(db, actorHandler.GetActorByName))
@@ -96,6 +98,7 @@ func Middleware(db *sql.DB, handler http.HandlerFunc) http.HandlerFunc {
 		defer func() {
 			err := recover()
 			if err != nil {
+				log.Printf("panic recovered: %v\n%s", err, debug.Stack())
 				http.Error(w, errors.ErrServerErr.Error(), http.StatusInternalServerError)
 			}
 		}()

@@ -55,7 +55,7 @@ func (r *ActorsRepository) Update(ctx context.Context, id int, update *models.Up
 	defer tx.Rollback() // if there is error revert changes to the db back to before the changes
 	// updateActorById := `UPDATE actors	SET name = ?, birthdate = ?, updated_at = ?	WHERE id = ?`
 	now := time.Now()
-	extraQuery := []string{"update_at = ?"}
+	extraQuery := []string{"updated_at = ?"}
 	args := []any{now}
 	if update.Name != nil {
 		extraQuery = append(extraQuery, `name = ?`)
