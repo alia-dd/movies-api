@@ -48,18 +48,21 @@ func (h *ActorHandler) UpdateActor(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid actor id", http.StatusBadRequest)
 		return
 	}
-	var actor models.Actor
+	var update models.UpdateActor
 
-	err = json.NewDecoder(r.Body).Decode(&actor)
+	err = json.NewDecoder(r.Body).Decode(&update)
 	if err != nil {
 		http.Error(w, "invalid JSON", http.StatusBadRequest)
 		return
 	}
-	actor.Id = id
-	err = h.service.UpdateActor(cx, &actor)
+	err = h.service.UpdateActor(cx, id, &update)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
+	}
+	actor, err := h.service.FindById(cx, id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
