@@ -115,12 +115,12 @@ The generated API key will be printed in the terminal.
 
 ### Using the API Key
 
-Add the API key to your request using the `apikey` query parameter:
+Add the API key to your request using the `x-api-key` header:
 
 For example:
 
 ```bash
-curl "http://localhost:8800/api/actors?apikey=YOUR_API_KEY"
+curl -k -H "x-api-key: YOUR_API_KEY" "https://localhost:8800/api/actors"
 ```
 
 ## API Endpoints
@@ -132,6 +132,7 @@ curl "http://localhost:8800/api/actors?apikey=YOUR_API_KEY"
 | POST | `/api/movies` | Create a movie |
 | GET | `/api/movies` | Get all movies with optional filters and pagination |
 | GET | `/api/movies/{id}` | Get movie by ID or title |
+| GET | `/api/movies/search?search=matrix` | Get movie by title |
 | PATCH | `/api/movies/{id}` | Update a movie |
 | DELETE | `/api/movies/{id}` | Delete a movie; use `?force=true` to delete its associations first |
 | GET | `/api/movies/{movieId}/actors` | Get actors linked to a movie |
@@ -145,7 +146,7 @@ curl "http://localhost:8800/api/actors?apikey=YOUR_API_KEY"
 | PATCH | `/api/actors/{id}` | Update an actor |
 | GET | `/api/actors` | Get all actors with pagination |
 | GET | `/api/actors/{id}` | Get actor by ID |
-| GET | `/api/actors/name/{name}` | Get actor by name |
+| GET | `/api/actors/name?name=Leonardo` | Get actor by name |
 | DELETE | `/api/actors/{id}` | Delete actor by ID |
 | DELETE | `/api/actors/name/{name}` | Delete actor by name |
 
@@ -183,12 +184,13 @@ GET /api/genres/search?q=drama&page=1&limit=10
 
 ## Example Requests
 
-You can test the API with either the `curl` examples below or the included Postman collection. `curl` is optional if you use Postman. To use Postman, import `movie_api.postman_collection.json`, start the server, and send the requests from the collection.
+You can test the API with either the `curl` examples below or the included Postman collection. `curl` is optional if you use Postman. To use Postman, import `Movie Database API generated.postman_collection.json`, start the server, and send the requests from the collection.
 
 ### Create a movie
 
 ```bash
-curl -X POST http://localhost:8800/api/movies \
+curl -k -X POST https://localhost:8800/api/movies \
+  -H "x-api-key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "title": "Inception",
@@ -207,7 +209,8 @@ The API uses `PATCH` to partially update a movie. You only need to include the f
 For example, to update the title and duration:
 
 ```bash
-curl -X PATCH "http://localhost:8800/api/movies/1?apikey=YOUR_API_KEY" \
+curl -k -X PATCH "https://localhost:8800/api/movies/1" \
+  -H "x-api-key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "title": "Inception Updated",
@@ -218,7 +221,8 @@ curl -X PATCH "http://localhost:8800/api/movies/1?apikey=YOUR_API_KEY" \
 You can also update the movie's actors and genres using their IDs:
 
 ```bash
-curl -X PATCH "http://localhost:8800/api/movies/1?apikey=YOUR_API_KEY" \
+curl -k -X PATCH "https://localhost:8800/api/movies/1" \
+  -H "x-api-key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "title": "Inception Updated",
@@ -235,7 +239,8 @@ Because this endpoint uses `PATCH`, you do not need to provide every movie field
 The API uses `PATCH` for updating existing actors.
 
 ```bash
-curl -X PATCH "http://localhost:8800/api/actors/1?apikey=YOUR_API_KEY" \
+curl -k -X PATCH "https://localhost:8800/api/actors/1" \
+  -H "x-api-key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Leonardo DiCaprio",
@@ -246,13 +251,14 @@ curl -X PATCH "http://localhost:8800/api/actors/1?apikey=YOUR_API_KEY" \
 ### Get all movies
 
 ```bash
-curl http://localhost:8800/api/movies?page=1&size=10
+curl -k "https://localhost:8800/api/movies?page=1&size=10"
 ```
 
 ### Create an actor
 
 ```bash
-curl -X POST http://localhost:8800/api/actors \
+curl -k -X POST https://localhost:8800/api/actors \
+  -H "x-api-key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Leonardo DiCaprio",
@@ -263,7 +269,7 @@ curl -X POST http://localhost:8800/api/actors \
 ### Search genres
 
 ```bash
-curl "http://localhost:8800/api/genres/search?q=drama&page=1&limit=10"
+curl -k -H "x-api-key: YOUR_API_KEY" "https://localhost:8800/api/genres/search?q=drama&page=1&limit=10"
 ```
 
 ### Force-delete a movie
@@ -271,14 +277,14 @@ curl "http://localhost:8800/api/genres/search?q=drama&page=1&limit=10"
 If `force` is omitted or set to `false`, the API performs a regular deletion and will not delete a movie that still has actor or genre associations:
 
 ```bash
-curl -X DELETE "http://localhost:8800/api/movies/123"
-curl -X DELETE "http://localhost:8800/api/movies/123?force=false"
+curl -k -X DELETE -H "x-api-key: YOUR_API_KEY" "https://localhost:8800/api/movies/123"
+curl -k -X DELETE -H "x-api-key: YOUR_API_KEY" "https://localhost:8800/api/movies/123?force=false"
 ```
 
 Use `force=true` to delete a movie together with its actor and genre associations:
 
 ```bash
-curl -X DELETE "http://localhost:8800/api/movies/123?force=true"
+curl -k -X DELETE -H "x-api-key: YOUR_API_KEY" "https://localhost:8800/api/movies/123?force=true"
 ```
 
 ## Notes
