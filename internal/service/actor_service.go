@@ -30,15 +30,15 @@ func (s *ActorService) CreateActor(ctx context.Context, actor *models.Actor) err
 
 }
 
-func (s *ActorService) UpdateActor(ctx context.Context, actor *models.Actor) error {
-	if actor.Name == "" || actor.BirthDate == "" {
+func (s *ActorService) UpdateActor(ctx context.Context, id int, actor *models.UpdateActor) error {
+	if *actor.Name == "" || *actor.BirthDate == "" {
 		return errors.ErrInvalidInput
 	}
-	_, err := time.Parse("2006-01-02", actor.BirthDate)
+	_, err := time.Parse("2006-01-02", *actor.BirthDate)
 	if err != nil {
 		return errors.ErrInvalidInput
 	}
-	return s.repo.Update(ctx, actor)
+	return s.repo.Update(ctx, id, actor)
 }
 
 func (s *ActorService) FindById(ctx context.Context, id int) (*models.Actor, error) {
