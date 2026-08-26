@@ -24,19 +24,28 @@ func main() {
 		return
 	}
 	server := &http.Server{
-		Addr: port,
+		Addr:    port,
 		Handler: srv,
+		// ReadTimeout is the maximum duration for reading the entire
+		// request, including the body.
+		ReadTimeout: 5 * time.Second,
+		// ReadHeaderTimeout is the amount of time allowed to read
+		// request headers.
+		ReadHeaderTimeout: 5 * time.Second,
+		// WriteTimeout is the maximum duration before timing out
+		// writes of the response.
+		WriteTimeout: 15 * time.Second,
 	}
 	serverError := make(chan error, 1)
 	go func() {
 		fmt.Printf("\033[0;32mserver running on localhost %s \033[0;37m\n", port)
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := server.ListenAndServeTLS("./server.pem", "./server.key"); err != nil && err != http.ErrServerClosed {
 			serverError <- err
 		}
 	}()
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
-	select{
+	select {
 	case err := <-serverError:
 		log.Printf("Server error: %v", err)
 	case sig := <-stop:
@@ -45,7 +54,7 @@ func main() {
 	log.Println("Server is shutting down...")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	if err := server.Shutdown(ctx); err != nil{
+	if err := server.Shutdown(ctx); err != nil {
 		log.Printf("Server shutdown error: %v", err)
 		return
 	}

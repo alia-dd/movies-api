@@ -8,7 +8,6 @@ import (
 	"movies-api/internal/models"
 	"strconv"
 	"strings"
-	"time"
 )
 
 const (
@@ -32,7 +31,7 @@ const (
 	getGenresIdBymovieIdQuery = `SELECT genreId FROM movie_genre WHERE movieId = ?`
 	getActorsIdBymovieIdQuery = `SELECT actorId FROM movie_actor WHERE movieId = ?`
 
-	patchMovieById = `UPDATE MOVIES SET updated_at = ?`
+	patchMovieById = `UPDATE MOVIES SET updated_at = CURRENT_TIMESTAMP `
 )
 
 type MovieRepository struct {
@@ -87,7 +86,6 @@ func (r *MovieRepository) Get(cx context.Context, f *models.Filter) ([]models.Mo
 			}
 		}
 	}
-
 	if f.Page != "" {
 		page, _ = strconv.Atoi(f.Page)
 		f.Page = strconv.Itoa(page)
@@ -250,9 +248,8 @@ func (r *MovieRepository) Patch(cx context.Context, id int, m models.MovieUpdate
 		return errors.ErrTransactionStart
 	}
 
-	now := time.Now()
 	extraQuery := []string{}
-	arg := []any{now}
+	arg := []any{}
 	if m.Title != nil {
 		extraQuery = append(extraQuery, ` title = ? `)
 		arg = append(arg, *m.Title)
@@ -278,11 +275,6 @@ func (r *MovieRepository) Patch(cx context.Context, id int, m models.MovieUpdate
 		query := fmt.Sprintf("%s, %s WHERE id = ? ", patchMovieById, strings.Join(extraQuery, ", "))
 		arg = append(arg, id)
 		_, patchErr := tx.ExecContext(cx, query, arg...)
-		if patchErr != nil {
-			return fmt.Errorf("failed to Update MOVIE id: %d %w", id, patchErr)
-		}
-	} else {
-		_, patchErr := tx.ExecContext(cx, patchMovieById, arg...)
 		if patchErr != nil {
 			return fmt.Errorf("failed to Update MOVIE id: %d %w", id, patchErr)
 		}
@@ -381,7 +373,10 @@ func (r *MovieRepository) GetMovie_genre(cx context.Context, MovieId int) ([]int
 	defer rows.Close()
 	for rows.Next() {
 		var genreId int
-		rows.Scan(&genreId)
+		err := rows.Scan(&genreId)
+		if err != nil {
+			return []int{}, 0
+		}
 		genresId = append(genresId, genreId)
 		count++
 	}
@@ -402,7 +397,10 @@ func (r *MovieRepository) GetMovie_actor(cx context.Context, MovieId int) ([]int
 	defer rows.Close()
 	for rows.Next() {
 		var actorId int
-		rows.Scan(&actorId)
+		err := rows.Scan(&actorId)
+		if err != nil {
+			return []int{}, 0
+		}
 		actorsId = append(actorsId, actorId)
 		count++
 	}

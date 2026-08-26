@@ -11,6 +11,6 @@ type Actor struct {
 }
 
 type UpdateActor struct {
-	Name      *string `json: "name, omitempty"`
-	BirthDate *string `"json: birthdate, omitempty"`
+	Name      *string `json:"name,omitempty"`
+	BirthDate *string `json:"birthdate,omitempty"`
 }
