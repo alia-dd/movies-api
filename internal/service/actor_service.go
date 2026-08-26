@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"movies-api/internal/errors"
 	"movies-api/internal/models"
 	"movies-api/internal/repository"
@@ -34,21 +33,17 @@ func (s *ActorService) CreateActor(ctx context.Context, actor *models.Actor) err
 
 func (s *ActorService) UpdateActor(ctx context.Context, id int, actor *models.UpdateActor) error {
 	if id <= 0 {
-		fmt.Println("id problem")
 		return errors.ErrInvalidInput
 	}
 	if actor.Name == nil && actor.BirthDate == nil {
-		fmt.Println("nil problem")
 		return errors.ErrInvalidInput
 	}
 	if actor.Name != nil && strings.TrimSpace(*actor.Name) == "" {
-		fmt.Println("trim problem")
 		return errors.ErrInvalidInput
 	}
 	if actor.BirthDate != nil {
 		_, err := time.Parse("2006-01-02", *actor.BirthDate)
 		if err != nil {
-			fmt.Println("time problem")
 			return errors.ErrInvalidInput
 		}
 	}
