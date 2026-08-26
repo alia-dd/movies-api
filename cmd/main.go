@@ -31,7 +31,7 @@ func main() {
 	go func() {
 		fmt.Printf("\033[0;32mserver running on localhost %s \033[0;37m\n", port)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatal(err)
+			serverError <- err
 		}
 	}()
 	stop := make(chan os.Signal, 1)
