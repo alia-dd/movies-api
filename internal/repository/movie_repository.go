@@ -278,8 +278,6 @@ func (r *MovieRepository) Patch(cx context.Context, id int, m models.MovieUpdate
 		if patchErr != nil {
 			return fmt.Errorf("failed to Update MOVIE id: %d %w", id, patchErr)
 		}
-	} else {
-		return errors.ErrInvalidInput
 	}
 
 	if len(m.AddActorIDs) > 0 {
@@ -375,7 +373,10 @@ func (r *MovieRepository) GetMovie_genre(cx context.Context, MovieId int) ([]int
 	defer rows.Close()
 	for rows.Next() {
 		var genreId int
-		rows.Scan(&genreId)
+		err := rows.Scan(&genreId)
+		if err != nil {
+			return []int{}, 0
+		}
 		genresId = append(genresId, genreId)
 		count++
 	}
@@ -396,7 +397,10 @@ func (r *MovieRepository) GetMovie_actor(cx context.Context, MovieId int) ([]int
 	defer rows.Close()
 	for rows.Next() {
 		var actorId int
-		rows.Scan(&actorId)
+		err := rows.Scan(&actorId)
+		if err != nil {
+			return []int{}, 0
+		}
 		actorsId = append(actorsId, actorId)
 		count++
 	}

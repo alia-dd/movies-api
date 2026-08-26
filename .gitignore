@@ -1,4 +1,6 @@
 *.db-wal
 *.db-shm
 *.db
-.env
+*.env
+*.key
+*.pem

@@ -5,6 +5,7 @@ import (
 	"movies-api/internal/errors"
 	"movies-api/internal/models"
 	"movies-api/internal/repository"
+	"strings"
 	"time"
 )
 
@@ -30,15 +31,24 @@ func (s *ActorService) CreateActor(ctx context.Context, actor *models.Actor) err
 
 }
 
-func (s *ActorService) UpdateActor(ctx context.Context, actor *models.Actor) error {
-	if actor.Name == "" || actor.BirthDate == "" {
+func (s *ActorService) UpdateActor(ctx context.Context, id int, actor *models.UpdateActor) error {
+	if id <= 0 {
 		return errors.ErrInvalidInput
 	}
-	_, err := time.Parse("2006-01-02", actor.BirthDate)
-	if err != nil {
+	if actor.Name == nil && actor.BirthDate == nil {
 		return errors.ErrInvalidInput
 	}
-	return s.repo.Update(ctx, actor)
+	if actor.Name != nil && strings.TrimSpace(*actor.Name) == "" {
+		return errors.ErrInvalidInput
+	}
+	if actor.BirthDate != nil {
+		_, err := time.Parse("2006-01-02", *actor.BirthDate)
+		if err != nil {
+			return errors.ErrInvalidInput
+		}
+	}
+
+	return s.repo.Update(ctx, id, actor)
 }
 
 func (s *ActorService) FindById(ctx context.Context, id int) (*models.Actor, error) {

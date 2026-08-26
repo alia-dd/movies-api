@@ -47,16 +47,32 @@ func (r *ActorsRepository) CreateActor(ctx context.Context, actor *models.Actor)
 	return tx.Commit()
 }
 
-func (r *ActorsRepository) Update(ctx context.Context, actor *models.Actor) error {
+func (r *ActorsRepository) Update(ctx context.Context, id int, update *models.UpdateActor) error {
 	tx, txErr := r.db.BeginTx(ctx, nil)
 	if txErr != nil {
 		return errors.ErrTransactionStart
 	}
 	defer tx.Rollback() // if there is error revert changes to the db back to before the changes
-	query := `UPDATE actors	SET name = ?, birthdate = ?, updated_at = ?	WHERE id = ?`
+	// updateActorById := `UPDATE actors	SET name = ?, birthdate = ?, updated_at = ?	WHERE id = ?`
 	now := time.Now()
-	result, err := tx.ExecContext(ctx, query, actor.Name, actor.BirthDate, now, actor.Id)
+	extraQuery := []string{"updated_at = ?"}
+	args := []any{now}
+	if update.Name != nil {
+		extraQuery = append(extraQuery, `name = ?`)
+		args = append(args, *update.Name)
+	}
+	if update.BirthDate != nil {
+		extraQuery = append(extraQuery, `birthdate = ?`)
+		args = append(args, *update.BirthDate)
+	}
+	args = append(args, id)
+	query := fmt.Sprintf("UPDATE actors SET %s WHERE id = ? ", strings.Join(extraQuery, ", "))
+
+	result, err := tx.ExecContext(ctx, query, args...)
 	if err != nil {
+		if strings.Contains(err.Error(), "UNIQUE constraints failed") {
+			return errors.ErrDuplicateKey
+		}
 		return err
 	}
 	rowsAffected, err := result.RowsAffected()
@@ -66,7 +82,6 @@ func (r *ActorsRepository) Update(ctx context.Context, actor *models.Actor) erro
 	if rowsAffected == 0 {
 		return errors.ErrNotFound
 	}
-	actor.UpdatedAt = now
 	return tx.Commit()
 }
 

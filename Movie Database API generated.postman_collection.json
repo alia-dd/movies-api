@@ -14,9 +14,14 @@
           "name": "Get all movies",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/movies?apikey={{apikey}}&page=1&size=10",
+              "raw": "{{base_url}}/api/movies?page=0&size=10",
               "host": [
                 "{{base_url}}"
               ],
@@ -26,12 +31,8 @@
               ],
               "query": [
                 {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
-                },
-                {
                   "key": "page",
-                  "value": "1"
+                  "value": "0"
                 },
                 {
                   "key": "size",
@@ -46,9 +47,14 @@
           "name": "Get all movies - large page size",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/movies?apikey={{apikey}}&page=1&size=199",
+              "raw": "{{base_url}}/api/movies?page=1&size=199",
               "host": [
                 "{{base_url}}"
               ],
@@ -57,10 +63,6 @@
                 "movies"
               ],
               "query": [
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
-                },
                 {
                   "key": "page",
                   "value": "1"
@@ -78,9 +80,14 @@
           "name": "Filter movies by genre",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/movies?apikey={{apikey}}&genre=Action",
+              "raw": "{{base_url}}/api/movies?genre=Action",
               "host": [
                 "{{base_url}}"
               ],
@@ -89,10 +96,6 @@
                 "movies"
               ],
               "query": [
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
-                },
                 {
                   "key": "genre",
                   "value": "Action"
@@ -106,9 +109,14 @@
           "name": "Filter movies by actor",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/movies?apikey={{apikey}}&actor=Tom Hanks",
+              "raw": "{{base_url}}/api/movies?actor=Tom Hanks",
               "host": [
                 "{{base_url}}"
               ],
@@ -117,10 +125,6 @@
                 "movies"
               ],
               "query": [
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
-                },
                 {
                   "key": "actor",
                   "value": "Tom Hanks"
@@ -134,9 +138,14 @@
           "name": "Filter movies by year",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/movies?apikey={{apikey}}&year=1994",
+              "raw": "{{base_url}}/api/movies?year=1994",
               "host": [
                 "{{base_url}}"
               ],
@@ -145,10 +154,6 @@
                 "movies"
               ],
               "query": [
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
-                },
                 {
                   "key": "year",
                   "value": "1994"
@@ -162,9 +167,14 @@
           "name": "Get movie by id",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/movies/{{movieId}}?apikey={{apikey}}",
+              "raw": "{{base_url}}/api/movies/{{movieId}}",
               "host": [
                 "{{base_url}}"
               ],
@@ -172,12 +182,6 @@
                 "api",
                 "movies",
                 "{{movieId}}"
-              ],
-              "query": [
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
-                }
               ]
             }
           },
@@ -187,9 +191,14 @@
           "name": "Get movie by title",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/movies/spider-man?apikey={{apikey}}",
+              "raw": "{{base_url}}/api/movies/spider-man",
               "host": [
                 "{{base_url}}"
               ],
@@ -197,12 +206,6 @@
                 "api",
                 "movies",
                 "spider-man"
-              ],
-              "query": [
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
-                }
               ]
             }
           },
@@ -212,9 +215,14 @@
           "name": "Get movie by id - not found (404)",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/movies/999999?apikey={{apikey}}",
+              "raw": "{{base_url}}/api/movies/999999",
               "host": [
                 "{{base_url}}"
               ],
@@ -222,12 +230,6 @@
                 "api",
                 "movies",
                 "999999"
-              ],
-              "query": [
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
-                }
               ]
             }
           },
@@ -237,9 +239,14 @@
           "name": "Get actors for movie",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/movies/{{movieId}}/actors?apikey={{apikey}}",
+              "raw": "{{base_url}}/api/movies/{{movieId}}/actors",
               "host": [
                 "{{base_url}}"
               ],
@@ -248,12 +255,6 @@
                 "movies",
                 "{{movieId}}",
                 "actors"
-              ],
-              "query": [
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
-                }
               ]
             }
           },
@@ -263,9 +264,14 @@
           "name": "Get genres for movie",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/movies/{{movieId}}/genres?apikey={{apikey}}",
+              "raw": "{{base_url}}/api/movies/{{movieId}}/genres",
               "host": [
                 "{{base_url}}"
               ],
@@ -274,12 +280,6 @@
                 "movies",
                 "{{movieId}}",
                 "genres"
-              ],
-              "query": [
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
-                }
               ]
             }
           },
@@ -293,6 +293,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
               }
             ],
             "body": {
@@ -305,19 +309,13 @@
               }
             },
             "url": {
-              "raw": "{{base_url}}/api/movies?apikey={{apikey}}",
+              "raw": "{{base_url}}/api/movies",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "movies"
-              ],
-              "query": [
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
-                }
               ]
             }
           },
@@ -331,6 +329,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
               }
             ],
             "body": {
@@ -343,19 +345,13 @@
               }
             },
             "url": {
-              "raw": "{{base_url}}/api/movies?apikey={{apikey}}",
+              "raw": "{{base_url}}/api/movies",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "movies"
-              ],
-              "query": [
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
-                }
               ]
             }
           },
@@ -369,11 +365,15 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"addActorIds\": [3, 4],\n  \"removeActorIds\": [1]\n}",
+              "raw": "{\n    \"addActorIds\": [3, 4, 4000],\n    \"removeActorIds\": [1]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -381,7 +381,7 @@
               }
             },
             "url": {
-              "raw": "{{base_url}}/api/movies/{{movieId}}?apikey={{apikey}}",
+              "raw": "{{base_url}}/api/movies/{{movieId}}",
               "host": [
                 "{{base_url}}"
               ],
@@ -389,12 +389,6 @@
                 "api",
                 "movies",
                 "{{movieId}}"
-              ],
-              "query": [
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
-                }
               ]
             }
           },
@@ -408,6 +402,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
               }
             ],
             "body": {
@@ -420,7 +418,7 @@
               }
             },
             "url": {
-              "raw": "{{base_url}}/api/movies/{{movieId}}?apikey={{apikey}}",
+              "raw": "{{base_url}}/api/movies/{{movieId}}",
               "host": [
                 "{{base_url}}"
               ],
@@ -428,12 +426,6 @@
                 "api",
                 "movies",
                 "{{movieId}}"
-              ],
-              "query": [
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
-                }
               ]
             }
           },
@@ -443,9 +435,14 @@
           "name": "Delete movie (blocked - has associations, 400)",
           "request": {
             "method": "DELETE",
-            "header": [],
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/movies/{{movieId}}?apikey={{apikey}}",
+              "raw": "{{base_url}}/api/movies/{{movieId}}",
               "host": [
                 "{{base_url}}"
               ],
@@ -453,12 +450,6 @@
                 "api",
                 "movies",
                 "{{movieId}}"
-              ],
-              "query": [
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
-                }
               ]
             }
           },
@@ -468,9 +459,14 @@
           "name": "Force delete movie (removes associations too)",
           "request": {
             "method": "DELETE",
-            "header": [],
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/movies/{{movieId}}?apikey={{apikey}}&force=true",
+              "raw": "{{base_url}}/api/movies/{{movieId}}?force=true",
               "host": [
                 "{{base_url}}"
               ],
@@ -480,10 +476,6 @@
                 "{{movieId}}"
               ],
               "query": [
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
-                },
                 {
                   "key": "force",
                   "value": "true"
@@ -502,9 +494,14 @@
           "name": "Get all actors",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/actors?apikey={{apikey}}&page=1&limit=10",
+              "raw": "{{base_url}}/api/actors?page=1&limit=10",
               "host": [
                 "{{base_url}}"
               ],
@@ -513,10 +510,6 @@
                 "actors"
               ],
               "query": [
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
-                },
                 {
                   "key": "page",
                   "value": "1"
@@ -534,9 +527,14 @@
           "name": "Get actor by id",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/actors/{{actorId}}?apikey={{apikey}}",
+              "raw": "{{base_url}}/api/actors/{{actorId}}",
               "host": [
                 "{{base_url}}"
               ],
@@ -544,12 +542,6 @@
                 "api",
                 "actors",
                 "{{actorId}}"
-              ],
-              "query": [
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
-                }
               ]
             }
           },
@@ -559,9 +551,14 @@
           "name": "Get actor by id - not found (404)",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/actors/999999?apikey={{apikey}}",
+              "raw": "{{base_url}}/api/actors/999999",
               "host": [
                 "{{base_url}}"
               ],
@@ -569,12 +566,6 @@
                 "api",
                 "actors",
                 "999999"
-              ],
-              "query": [
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
-                }
               ]
             }
           },
@@ -584,9 +575,14 @@
           "name": "Get actor by name - lowercase",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/actors/name?name=tom hanks&apikey={{apikey}}",
+              "raw": "{{base_url}}/api/actors/name?name=tom hanks",
               "host": [
                 "{{base_url}}"
               ],
@@ -599,10 +595,6 @@
                 {
                   "key": "name",
                   "value": "tom hanks"
-                },
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
                 }
               ]
             }
@@ -613,9 +605,14 @@
           "name": "Get actor by name - Title Case",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/actors/name?name=Tom Hanks&apikey={{apikey}}",
+              "raw": "{{base_url}}/api/actors/name?name=Tom Hanks",
               "host": [
                 "{{base_url}}"
               ],
@@ -628,10 +625,6 @@
                 {
                   "key": "name",
                   "value": "Tom Hanks"
-                },
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
                 }
               ]
             }
@@ -642,9 +635,14 @@
           "name": "Get actor by name - UPPERCASE",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/actors/name?name=TOM HANKS&apikey={{apikey}}",
+              "raw": "{{base_url}}/api/actors/name?name=TOM HANKS",
               "host": [
                 "{{base_url}}"
               ],
@@ -657,10 +655,6 @@
                 {
                   "key": "name",
                   "value": "TOM HANKS"
-                },
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
                 }
               ]
             }
@@ -675,11 +669,15 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Leonardo DiCaprio\",\n  \"birthDate\": \"1974-11-11\"\n}",
+              "raw": "{\n  \"name\": \"Leonardo dicupo\",\n  \"birthDate\": \"1975-11-11\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -687,19 +685,13 @@
               }
             },
             "url": {
-              "raw": "{{base_url}}/api/actors?apikey={{apikey}}",
+              "raw": "{{base_url}}/api/actors",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "actors"
-              ],
-              "query": [
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
-                }
               ]
             }
           },
@@ -713,6 +705,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
               }
             ],
             "body": {
@@ -725,19 +721,13 @@
               }
             },
             "url": {
-              "raw": "{{base_url}}/api/actors?apikey={{apikey}}",
+              "raw": "{{base_url}}/api/actors",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "actors"
-              ],
-              "query": [
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
-                }
               ]
             }
           },
@@ -751,6 +741,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
               }
             ],
             "body": {
@@ -763,7 +757,7 @@
               }
             },
             "url": {
-              "raw": "{{base_url}}/api/actors/{{actorId}}?apikey={{apikey}}",
+              "raw": "{{base_url}}/api/actors/{{actorId}}",
               "host": [
                 "{{base_url}}"
               ],
@@ -771,12 +765,6 @@
                 "api",
                 "actors",
                 "{{actorId}}"
-              ],
-              "query": [
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
-                }
               ]
             }
           },
@@ -790,6 +778,14 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
+              },
+              {
+                "key": "",
+                "value": ""
               }
             ],
             "body": {
@@ -802,7 +798,7 @@
               }
             },
             "url": {
-              "raw": "{{base_url}}/api/actors/{{actorId}}?apikey={{apikey}}",
+              "raw": "{{base_url}}/api/actors/{{actorId}}",
               "host": [
                 "{{base_url}}"
               ],
@@ -810,12 +806,6 @@
                 "api",
                 "actors",
                 "{{actorId}}"
-              ],
-              "query": [
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
-                }
               ]
             }
           },
@@ -825,9 +815,14 @@
           "name": "Delete actor by id",
           "request": {
             "method": "DELETE",
-            "header": [],
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/actors/{{actorId}}?apikey={{apikey}}",
+              "raw": "{{base_url}}/api/actors/{{actorId}}",
               "host": [
                 "{{base_url}}"
               ],
@@ -835,12 +830,6 @@
                 "api",
                 "actors",
                 "{{actorId}}"
-              ],
-              "query": [
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
-                }
               ]
             }
           },
@@ -850,9 +839,14 @@
           "name": "Force delete actor by id (removes from movies too)",
           "request": {
             "method": "DELETE",
-            "header": [],
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/actors/{{actorId}}?apikey={{apikey}}&force=true",
+              "raw": "{{base_url}}/api/actors/{{actorId}}?force=true",
               "host": [
                 "{{base_url}}"
               ],
@@ -862,10 +856,6 @@
                 "{{actorId}}"
               ],
               "query": [
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
-                },
                 {
                   "key": "force",
                   "value": "true"
@@ -879,9 +869,14 @@
           "name": "Delete actor by name",
           "request": {
             "method": "DELETE",
-            "header": [],
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/actors/name/Leonardo DiCaprio?apikey={{apikey}}",
+              "raw": "{{base_url}}/api/actors/name/Leonardo DiCaprio",
               "host": [
                 "{{base_url}}"
               ],
@@ -890,12 +885,6 @@
                 "actors",
                 "name",
                 "Leonardo DiCaprio"
-              ],
-              "query": [
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
-                }
               ]
             }
           },
@@ -910,9 +899,14 @@
           "name": "Get all genres",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/genres?apikey={{apikey}}&page=1&limit=10",
+              "raw": "{{base_url}}/api/genres?page=1&limit=10",
               "host": [
                 "{{base_url}}"
               ],
@@ -921,10 +915,6 @@
                 "genres"
               ],
               "query": [
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
-                },
                 {
                   "key": "page",
                   "value": "1"
@@ -942,9 +932,14 @@
           "name": "Get genre by id",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/genres/{{genreId}}?apikey={{apikey}}",
+              "raw": "{{base_url}}/api/genres/{{genreId}}",
               "host": [
                 "{{base_url}}"
               ],
@@ -952,12 +947,6 @@
                 "api",
                 "genres",
                 "{{genreId}}"
-              ],
-              "query": [
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
-                }
               ]
             }
           },
@@ -967,9 +956,14 @@
           "name": "Get genre by id - not found (404)",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/genres/999999?apikey={{apikey}}",
+              "raw": "{{base_url}}/api/genres/999999",
               "host": [
                 "{{base_url}}"
               ],
@@ -977,12 +971,6 @@
                 "api",
                 "genres",
                 "999999"
-              ],
-              "query": [
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
-                }
               ]
             }
           },
@@ -992,9 +980,14 @@
           "name": "Search genres by name",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/genres/search?apikey={{apikey}}&q=drama&page=1&limit=10",
+              "raw": "{{base_url}}/api/genres/search?q=drama&page=1&limit=10",
               "host": [
                 "{{base_url}}"
               ],
@@ -1004,10 +997,6 @@
                 "search"
               ],
               "query": [
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
-                },
                 {
                   "key": "q",
                   "value": "drama"
@@ -1033,6 +1022,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
               }
             ],
             "body": {
@@ -1045,19 +1038,13 @@
               }
             },
             "url": {
-              "raw": "{{base_url}}/api/genres?apikey={{apikey}}",
+              "raw": "{{base_url}}/api/genres",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
                 "genres"
-              ],
-              "query": [
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
-                }
               ]
             }
           },
@@ -1071,6 +1058,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
               }
             ],
             "body": {
@@ -1083,7 +1074,7 @@
               }
             },
             "url": {
-              "raw": "{{base_url}}/api/genres/{{genreId}}?apikey={{apikey}}",
+              "raw": "{{base_url}}/api/genres/{{genreId}}",
               "host": [
                 "{{base_url}}"
               ],
@@ -1091,12 +1082,6 @@
                 "api",
                 "genres",
                 "{{genreId}}"
-              ],
-              "query": [
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
-                }
               ]
             }
           },
@@ -1110,6 +1095,10 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
               }
             ],
             "body": {
@@ -1122,7 +1111,7 @@
               }
             },
             "url": {
-              "raw": "{{base_url}}/api/genres/{{genreId}}?apikey={{apikey}}",
+              "raw": "{{base_url}}/api/genres/{{genreId}}",
               "host": [
                 "{{base_url}}"
               ],
@@ -1130,12 +1119,6 @@
                 "api",
                 "genres",
                 "{{genreId}}"
-              ],
-              "query": [
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
-                }
               ]
             }
           },
@@ -1145,9 +1128,14 @@
           "name": "Delete genre (blocked - has associations, 400)",
           "request": {
             "method": "DELETE",
-            "header": [],
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/genres/{{genreId}}?apikey={{apikey}}",
+              "raw": "{{base_url}}/api/genres/{{genreId}}",
               "host": [
                 "{{base_url}}"
               ],
@@ -1155,12 +1143,6 @@
                 "api",
                 "genres",
                 "{{genreId}}"
-              ],
-              "query": [
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
-                }
               ]
             }
           },
@@ -1170,9 +1152,14 @@
           "name": "Force delete genre (removes associations too)",
           "request": {
             "method": "DELETE",
-            "header": [],
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/genres/{{genreId}}?apikey={{apikey}}&force=true",
+              "raw": "{{base_url}}/api/genres/{{genreId}}?force=true",
               "host": [
                 "{{base_url}}"
               ],
@@ -1182,10 +1169,6 @@
                 "{{genreId}}"
               ],
               "query": [
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
-                },
                 {
                   "key": "force",
                   "value": "true"
@@ -1199,9 +1182,14 @@
           "name": "Delete genre by name",
           "request": {
             "method": "DELETE",
-            "header": [],
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apikey}}"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/api/genres/name/Sci-Fi?apikey={{apikey}}",
+              "raw": "{{base_url}}/api/genres/name/Sci-Fi",
               "host": [
                 "{{base_url}}"
               ],
@@ -1210,12 +1198,6 @@
                 "genres",
                 "name",
                 "Sci-Fi"
-              ],
-              "query": [
-                {
-                  "key": "apikey",
-                  "value": "{{apikey}}"
-                }
               ]
             }
           },
