@@ -71,7 +71,7 @@ func (s *MovieService) CreateMovie(cx context.Context, movie models.Movies) (*mo
 }
 
 func (s *MovieService) UpdateMovie(cx context.Context, id int, m models.MovieUpdate) (*models.MoviesDisplay, error) {
-	if m.ReleaseYear != nil && (*m.ReleaseYear < 1888 || *m.ReleaseYear > time.Now().Year()) {
+	if id <= 0 || (m.ReleaseYear != nil && (*m.ReleaseYear < 1888 || *m.ReleaseYear > time.Now().Year())) {
 		return nil, errors.ErrInvalidInput
 	}
 	if _, err := s.repo.GetById(cx, id); err != nil {

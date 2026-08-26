@@ -99,8 +99,13 @@ func Middleware(db *sql.DB, handler http.HandlerFunc) http.HandlerFunc {
 				http.Error(w, errors.ErrServerErr.Error(), http.StatusInternalServerError)
 			}
 		}()
+
 		// checkes if the apikey is valid
-		key := strings.TrimSpace(r.URL.Query().Get("apikey"))
+		key := strings.TrimSpace(r.Header.Get("x-api-key"))
+		if key == "" {
+			http.Error(w, "API KEY Not Provided", http.StatusBadRequest)
+			return
+		}
 		if found := database.GetApiKey(db, key); !found {
 			http.Error(w, errors.ErrWrongApiKey.Error(), http.StatusBadRequest)
 			return
