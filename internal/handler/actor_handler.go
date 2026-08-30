@@ -3,6 +3,7 @@ package handler
 import (
 	"database/sql"
 	"encoding/json"
+	goerrors "errors"
 	"movies-api/internal/errors"
 	"movies-api/internal/models"
 	"movies-api/internal/service"
@@ -123,7 +124,7 @@ func (h *ActorHandler) GetActorsById(w http.ResponseWriter, r *http.Request) {
 	}
 	actors, err := h.service.FindById(cx, Id)
 
-	if err == sql.ErrNoRows {
+	if goerrors.Is(err, errors.ErrNotFound) {
 		http.Error(w, errors.ErrNotFound.Error(), http.StatusNotFound)
 		return
 	} else if err != nil {
