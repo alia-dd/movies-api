@@ -166,7 +166,11 @@ func (h *ActorHandler) DeleteActorsById(w http.ResponseWriter, r *http.Request) 
 	}
 	force := r.URL.Query().Get("force") == "true"
 	err := h.service.DeleteActorsById(cx, Id, force)
-	if err != nil {
+	
+	if goerrors.Is(err, errors.ErrNotFound) {
+		http.Error(w, errors.ErrNotFound.Error(), http.StatusNotFound)
+		return
+	}else if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
