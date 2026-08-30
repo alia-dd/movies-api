@@ -123,7 +123,10 @@ func (h *ActorHandler) GetActorsById(w http.ResponseWriter, r *http.Request) {
 	}
 	actors, err := h.service.FindById(cx, Id)
 
-	if err != nil {
+	if err == sql.ErrNoRows {
+		http.Error(w, errors.ErrNotFound.Error(), http.StatusNotFound)
+		return
+	} else if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
